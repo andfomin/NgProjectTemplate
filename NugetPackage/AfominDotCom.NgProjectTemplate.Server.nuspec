@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata minClientVersion="3.5.0">
+    <id>AfominDotCom.NgProjectTemplate.Server</id>
+    <title>Angular CLI Project Template Helper</title>
+    <version>1.0.1</version>
+    <summary>Design-time support for Angular CLI projects in Visual Studio.</summary>
+    <description>Design-time support for Angular CLI projects in Visual Studio. This package is referenced from the Angular CLI Project Template. Do not install this package manually.</description>
+    <authors>Andrey Fomin</authors>
+    <owners>Andrey Fomin</owners>
+    <copyright>Copyright 2016</copyright>
+    <projectUrl>https://github.com/andfomin/NgProjectTemplate</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/andfomin/NgProjectTemplate/master/NgProjectTemplate/NgProjectTemplateIcon.ico</iconUrl>
+    <licenseUrl>https://github.com/andfomin/NgProjectTemplate/blob/master/LICENSE</licenseUrl>
+    <tags>angular angular-cli static</tags>
+
+    <dependencies>
+      <dependency id="Microsoft.AspNetCore" version="1.1.2" />
+    </dependencies>
+  </metadata>
+
+  <files>
+    <file src=".\*.cs" target="tools" />
+    <file src=".\*.props" target="build" />
+    <file src=".\*.targets" target="build" />
+  </files>
+</package>

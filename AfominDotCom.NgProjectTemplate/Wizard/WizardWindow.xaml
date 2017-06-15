@@ -1,0 +1,60 @@
+﻿<Window x:Class="AfominDotCom.NgProjectTemplate.Wizard.WizardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AfominDotCom.NgProjectTemplate.Wizard"
+        mc:Ignorable="d"
+        Width="576" Height="324" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" 
+        ShowInTaskbar="False" Title="{Binding Path=WindowTitle}" Icon="pack://application:,,,/AfominDotCom.NgProjectTemplate;component/Resources/NgProjectTemplateIcon.ico"  
+        FocusManager.FocusedElement="{Binding ElementName=OkButton}"
+        >
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Orientation="Vertical" Margin="30, 30" >
+            <TextBlock x:Name="NgNotFoundText" TextWrapping="Wrap" 
+                       Visibility="{Binding Path=IsNgNotFound, Converter={StaticResource BooleanToVisibilityConverter}}" >
+                <Run FontWeight="SemiBold">WARNING</Run>
+                <LineBreak></LineBreak>It looks like Angular CLI is not installed globally.
+                <LineBreak></LineBreak>If you proceed with the project creation, you can manually create an Angular CLI application within the project folder later on.
+                <LineBreak></LineBreak>
+                <Hyperlink x:Name="LearnMoreNgNotFound" NavigateUri="https://github.com/angular/angular-cli#installation" RequestNavigate="LearnMoreNgNotFound_RequestNavigate" >
+                    Learn how to install Angular CLI ...
+                </Hyperlink>
+            </TextBlock>
+            <StackPanel Orientation="Vertical" 
+                        Visibility="{Binding Path=IsNgFound, Converter={StaticResource BooleanToVisibilityConverter}}" >
+                <CheckBox FontSize="14" IsChecked="{Binding Path=SkipInstall, Mode=TwoWay}" >
+                    <TextBlock>
+                        Skip installing NPM packages
+                    </TextBlock>
+                </CheckBox>
+                <TextBlock TextWrapping="Wrap" >
+                    If the checkbox is <Italic>selected</Italic>, an installation will run during the first build of the project.
+                    <LineBreak></LineBreak>If the checkbox is <Italic>unselected</Italic>, an installation process will start in the background immediately after the project has been created.
+                    <LineBreak></LineBreak><Italic>Note</Italic>: If you close and reopen the project, Visual Studio will automatically start installing NPM packages.
+                    <LineBreak></LineBreak>
+                    <Hyperlink x:Name="LearnMoreSkipInstall" NavigateUri="https://github.com/andfomin/NgProjectTemplate#skipinstall" RequestNavigate="LearnMoreSkipInstall_RequestNavigate" >
+                        Learn more ...
+                    </Hyperlink>
+                </TextBlock>
+            </StackPanel>
+
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+                    Orientation="Horizontal" Height="30" Margin="0,0,20,20" >
+            <Button Content="OK" Width="80" x:Name="OkButton" IsDefault="True" Click="OnClickOk" />
+            <Button Content="Cancel" Width="80" Margin="10,0,0,0" IsCancel="True" Click="OnClickCancel" />
+        </StackPanel>
+    </Grid>
+</Window>

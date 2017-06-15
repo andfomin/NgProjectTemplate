@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AfominDotCom.NgProjectTemplate.Server" Version="1.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include=".gitignore" />
+    <None Include="README.md" />
+    $includepackagejson$
+  </ItemGroup>
+
+  <Target Name="NgBuildAndAddToPublishOutput" AfterTargets="ComputeFilesToPublish">
+    <Message Text=" " Importance="high" />
+    <Exec Command="npm run build" />
+
+    <ItemGroup>
+      <DistFiles Include="dist\**" />
+      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>%(DistFiles.Identity)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CopyOnlyDist" AfterTargets="_CopyManagedProjectFilesToPublishIntermediateOutputPath;_CopyAspNetCoreFilesToIntermediateOutputPath">
+    <PropertyGroup>
+      <PublishIntermediateOutputPath>$(PublishIntermediateOutputPath)dist\</PublishIntermediateOutputPath>
+      <IsTransformWebConfigDisabled>True</IsTransformWebConfigDisabled>
+    </PropertyGroup>
+  </Target>
+
+</Project>

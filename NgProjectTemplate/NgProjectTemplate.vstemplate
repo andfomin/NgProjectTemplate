@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005" xmlns:sdk="http://schemas.microsoft.com/developer/vstemplate-sdkextension/2010">
+  <TemplateData>
+    <Name>Angular CLI Application</Name>
+    <Description>This project template creates an Angular CLI application. The project will launch the original NG Development Server.</Description>
+    <Icon>NgProjectTemplateIcon.ico</Icon>
+    <PreviewImage>NgProjectTemplatePreview.png</PreviewImage>
+    <ProjectType>CSharp</ProjectType>
+    <SortOrder>1000</SortOrder>
+    <TemplateID>94c71159-2037-4edb-8945-110ddebd793c</TemplateID>
+    <CreateNewFolder>true</CreateNewFolder>
+    <DefaultName>NgApp</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+  </TemplateData>
+  <TemplateContent>
+    <Project File="Template.Project.csproj" ReplaceParameters="true">
+      <ProjectItem TargetFileName=".gitignore">Template.gitignore</ProjectItem>
+      <ProjectItem TargetFileName="README.md">Template.README.md</ProjectItem>
+      <ProjectItem TargetFileName="package.json">Template.package.json</ProjectItem>
+    </Project>
+  </TemplateContent>
+  <WizardExtension>
+    <Assembly>AfominDotCom.NgProjectTemplate, Version=1.0.1.0, Culture=Neutral, PublicKeyToken=53bcf0057ad908c4</Assembly>
+    <FullClassName>AfominDotCom.NgProjectTemplate.Wizard.NgProjectTemplateWizard</FullClassName>
+  </WizardExtension>
+</VSTemplate>

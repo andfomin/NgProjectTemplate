@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.6
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NgProjectTemplate", "NgProjectTemplate\NgProjectTemplate.csproj", "{ED0C3643-6067-48C3-8C39-EE57406BB14F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AfominDotCom.NgProjectTemplate", "AfominDotCom.NgProjectTemplate\AfominDotCom.NgProjectTemplate.csproj", "{DEDD964A-2167-4DE6-ADFE-FA6C29886395}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NugetPackage", "NugetPackage", "{E2DA46D1-346A-495A-AC68-6A0782CC30C3}"
+	ProjectSection(SolutionItems) = preProject
+		NugetPackage\AfominDotCom.NgProjectTemplate.Server.nuspec = NugetPackage\AfominDotCom.NgProjectTemplate.Server.nuspec
+		NugetPackage\AfominDotCom.NgProjectTemplate.Server.props = NugetPackage\AfominDotCom.NgProjectTemplate.Server.props
+		NugetPackage\AfominDotCom.NgProjectTemplate.Server.targets = NugetPackage\AfominDotCom.NgProjectTemplate.Server.targets
+		NugetPackage\AspNetToNgRedirector.cs = NugetPackage\AspNetToNgRedirector.cs
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ED0C3643-6067-48C3-8C39-EE57406BB14F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED0C3643-6067-48C3-8C39-EE57406BB14F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED0C3643-6067-48C3-8C39-EE57406BB14F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED0C3643-6067-48C3-8C39-EE57406BB14F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DEDD964A-2167-4DE6-ADFE-FA6C29886395}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DEDD964A-2167-4DE6-ADFE-FA6C29886395}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DEDD964A-2167-4DE6-ADFE-FA6C29886395}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DEDD964A-2167-4DE6-ADFE-FA6C29886395}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
