@@ -103,25 +103,6 @@ turning off the setting <strong><i>Enable JavaScript Debugging for ASP.NET (Chro
 </div>
 ";
 
-        private const string UnsupportedEnvironmentErrorPage = @"<!DOCTYPE html>
-<html>
-<head>
-  <meta charset='utf-8' />
-  <title>Unsupported Environment value</title>
-</head>
-<body>
-{{StyleSection}}
-<p>
-<span class='my-red'>ERROR.</span> Environment value <strong>{{EnvironmentSetting}}</strong> is not supported. 
-<br/>
-To enable the NG Development Server, open the project's Properies page and select the Debug tab, 
-<br/>
-than make sure the Environment Variable named <strong>ASPNETCORE_ENVIRONMENT</strong> has value <strong>Development</strong>.
-</p>
-</body>
-</html>
-";
-
         private const string PortUnavailableErrorPage = @"<!DOCTYPE html>
 <html>
 <head>
@@ -133,7 +114,7 @@ than make sure the Environment Variable named <strong>ASPNETCORE_ENVIRONMENT</st
 <p>
 <span class='my-red'>ERROR.</span> Port <strong>{{NgServerPort}}</strong> is already in use. 
 <br/>
-To specify a different port, open the project's Properies page and select the Debug tab. 
+To specify a different port, open the project's Properties page and select the Debug tab. 
 <br/>
 Add an Environment Variable named <strong>ASPNETCORE_NgServerPort</strong> and specify the port number as its Value.
 </p>
@@ -162,67 +143,51 @@ Add an Environment Variable named <strong>ASPNETCORE_NgServerPort</strong> and s
 
             var webHostBuilder = new WebHostBuilder();
 
-            var environmentSetting = webHostBuilder.GetSetting("environment");
-            var isSupportedEnvironment = !String.IsNullOrEmpty(environmentSetting) && (environmentSetting.ToLower() == "development");
-
             var ngServerPortSetting = webHostBuilder.GetSetting(NgServerPortSettingName);
             if (!Int32.TryParse(ngServerPortSetting, out int ngServerPort))
             {
                 ngServerPort = DefaultNgServerPort;
             }
 
-            string startPage = null;
-            Process ngProcess = null;
 
-            if (isSupportedEnvironment)
+            // Visual Studio writes Byte Order Mark when saves files. 
+            // Webpack fails reading such a package.json. +https://github.com/webpack/enhanced-resolve/issues/87
+            // Athough the docs claim that VS is aware of the special case of package.json, 
+            // apparently VS fails to recognize the file when the template wizard saves it during the project creation.
+            var packageJsonFilePath = Path.Combine(Directory.GetCurrentDirectory(), packageJsonFileName);
+            if (File.Exists(packageJsonFilePath))
             {
-                // Visual Studio writes Byte Order Mark when saves files. 
-                // Webpack fails reading such a package.json. +https://github.com/webpack/enhanced-resolve/issues/87
-                var packageJsonFilePath = Path.Combine(Directory.GetCurrentDirectory(), packageJsonFileName);
-                if (File.Exists(packageJsonFilePath))
-                {
-                    StripBomFromFile(packageJsonFilePath);
-                }
-
-                // An NG Develpment Server may have already been started manually from the Command Prompt. If that's the case, don't start our instance.
-                using (var netstatProcess = new Process())
-                {
-                    netstatProcess.StartInfo.FileName = "cmd.exe";
-                    netstatProcess.StartInfo.Arguments = $"/c netstat.exe -a -n -p TCP | findstr LISTENING | findstr :{ngServerPort}";
-                    netstatProcess.StartInfo.UseShellExecute = false;
-                    netstatProcess.StartInfo.RedirectStandardOutput = true;
-                    netstatProcess.Start();
-                    var netstatOutput = netstatProcess.StandardOutput.ReadToEnd();
-                    netstatProcess.WaitForExit();
-
-                    var isNgServerPortAvailable = String.IsNullOrWhiteSpace(netstatOutput);
-                    if (!isNgServerPortAvailable)
-                    {
-                        startPage = PortUnavailableErrorPage
-                          .Replace("{{EnvironmentSetting}}", environmentSetting);
-                    }
-                }
-                // Run "ng serve". For ASP.NET applications the working directory is the project root.
-                ngProcess = Process.Start("cmd.exe", $"/k start ng.cmd serve --port {ngServerPort}");
-            }
-            else
-            {
-                startPage = UnsupportedEnvironmentErrorPage
-                  .Replace("{{EnvironmentSetting}}", environmentSetting);
+                StripBomFromFile(packageJsonFilePath);
             }
 
-            if (startPage == null)
+            // An NG Develpment Server may have already been started manually from the Command Prompt. If that's the case, inform the user how to specify another port.
+            bool isNgServerPortAvailable = true;
+            using (var netstatProcess = new Process())
             {
-                startPage = StartPage
-                  .Replace("{{RedirectionPageUrl}}", RedirectionPageUrl)
-                  .Replace("{{DebuggerWarning}}", (Debugger.IsAttached ? DebuggerWarning : ""))
-                  ;
+                netstatProcess.StartInfo.FileName = "cmd.exe";
+                netstatProcess.StartInfo.Arguments = $"/c netstat.exe -a -n -p TCP | findstr LISTENING | findstr :{ngServerPort}";
+                netstatProcess.StartInfo.UseShellExecute = false;
+                netstatProcess.StartInfo.RedirectStandardOutput = true;
+                netstatProcess.Start();
+                var netstatOutput = netstatProcess.StandardOutput.ReadToEnd();
+                netstatProcess.WaitForExit();
+
+                isNgServerPortAvailable = String.IsNullOrWhiteSpace(netstatOutput);
             }
 
-            startPage = startPage
-              .Replace("{{NgServerPort}}", ngServerPort.ToString())
-              .Replace("{{StyleSection}}", StyleSection)
-              ;
+            // Run "ng serve". For ASP.NET applications the working directory is the project root.
+            var ngProcess = Process.Start("cmd.exe", $"/k start ng.cmd serve --port {ngServerPort}");
+
+            var startPage = (isNgServerPortAvailable
+               ? (StartPage
+               .Replace("{{RedirectionPageUrl}}", RedirectionPageUrl)
+               .Replace("{{DebuggerWarning}}", (Debugger.IsAttached ? DebuggerWarning : ""))
+               )
+               : PortUnavailableErrorPage
+               )
+               .Replace("{{NgServerPort}}", ngServerPort.ToString())
+               .Replace("{{StyleSection}}", StyleSection)
+               ;
 
             var redirectionPage = RedirectionPage
               .Replace("{{NgServerPort}}", ngServerPort.ToString());
@@ -254,7 +219,13 @@ Add an Environment Variable named <strong>ASPNETCORE_NgServerPort</strong> and s
               .Build()
               ;
 
-            webHost.Run(cancellationToken);
+            // When the profile is "IIS Express" this setting is present. Sometimes we face "{{AppName}}" as the active profile, which doesn't have this setting (its value returns "production"? default?). That "{{AppName}}" profile doesn't open a web browser, so we cannot redirect anyway.
+            var environmentSetting = webHostBuilder.GetSetting("environment");
+            var isIISExpressEnvironment = !String.IsNullOrEmpty(environmentSetting) && (environmentSetting.ToLower() == "development");
+            if (isIISExpressEnvironment)
+            {
+                webHost.Run(cancellationToken);
+            }
 
             if (ngProcess != null)
             {

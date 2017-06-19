@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.6
+VisualStudioVersion = 15.0.26430.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NgProjectTemplate", "NgProjectTemplate\NgProjectTemplate.csproj", "{ED0C3643-6067-48C3-8C39-EE57406BB14F}"
 EndProject
@@ -13,6 +13,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NugetPackage", "NugetPackag
 		NugetPackage\AfominDotCom.NgProjectTemplate.Server.props = NugetPackage\AfominDotCom.NgProjectTemplate.Server.props
 		NugetPackage\AfominDotCom.NgProjectTemplate.Server.targets = NugetPackage\AfominDotCom.NgProjectTemplate.Server.targets
 		NugetPackage\AspNetToNgRedirector.cs = NugetPackage\AspNetToNgRedirector.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FD9080B8-D0B1-4B84-BBFD-27962A64D2C1}"
+	ProjectSection(SolutionItems) = preProject
+		Readme.md = Readme.md
 	EndProjectSection
 EndProject
 Global

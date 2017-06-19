@@ -8,18 +8,18 @@ namespace AfominDotCom.NgProjectTemplate.Wizard
     {
         public string WindowTitle { get; set; }
         public bool IsNgFound { get; set; }
-        public bool SkipInstall { get; set; }
+        public bool SkipNpmInstall { get; set; }
 
         public bool IsNgNotFound
         {
             get { return !this.IsNgFound; }
         }
 
-        public WizardViewModel(string projectName, bool isNgFound, bool skipInstall)
+        public WizardViewModel(string projectName, bool isNgFound, bool skipNpmInstall)
         {
             this.WindowTitle = String.Format(WizardResources.WindowTitle, projectName); 
             this.IsNgFound = isNgFound;
-            this.SkipInstall = skipInstall;
+            this.SkipNpmInstall = skipNpmInstall;
         }
 
 

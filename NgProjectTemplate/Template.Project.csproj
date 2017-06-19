@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AfominDotCom.NgProjectTemplate.Server" Version="1.0.1" />
+    <PackageReference Include="AfominDotCom.NgProjectTemplate.Server" Version="1.0.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -14,6 +14,22 @@
     <None Include="README.md" />
     $includepackagejson$
   </ItemGroup>
+
+  <PropertyGroup>
+    <NgProjectAssetsFile Condition="'$(ProjectAssetsFile)' != ''">$(ProjectAssetsFile)</NgProjectAssetsFile>
+    <NgProjectAssetsFile Condition="'$(NgProjectAssetsFile)' == ''">$(BaseIntermediateOutputPath)/project.assets.json</NgProjectAssetsFile>
+    <!-- Ensure $(NgProjectAssetsFile) is a full path -->
+    <NgProjectAssetsFile Condition="'$([System.IO.Path]::IsPathRooted($(NgProjectAssetsFile)))' != 'true'">
+      $([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(MSBuildProjectDirectory)', '$(NgProjectAssetsFile)'))))
+    </NgProjectAssetsFile>
+  </PropertyGroup>
+
+  <Target Name="EnsureNugetPackagesInstalled" BeforeTargets="BeforeBuild" Condition="!Exists('$(NgProjectAssetsFile)')">
+    <Message Text="File $(NgProjectAssetsFile) was not found." Importance="high" />
+    <Message Text="------ Running a NuGet package restore ------" Importance="high" />
+    <Exec Command="dotnet restore" />
+    <Error Text="NuGet packages were restored. Run Build again." />
+  </Target>
 
   <Target Name="NgBuildAndAddToPublishOutput" AfterTargets="ComputeFilesToPublish">
     <Message Text=" " Importance="high" />
@@ -34,5 +50,5 @@
       <IsTransformWebConfigDisabled>True</IsTransformWebConfigDisabled>
     </PropertyGroup>
   </Target>
-
+  
 </Project>

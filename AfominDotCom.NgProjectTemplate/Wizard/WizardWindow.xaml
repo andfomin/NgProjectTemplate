@@ -33,17 +33,17 @@
             </TextBlock>
             <StackPanel Orientation="Vertical" 
                         Visibility="{Binding Path=IsNgFound, Converter={StaticResource BooleanToVisibilityConverter}}" >
-                <CheckBox FontSize="14" IsChecked="{Binding Path=SkipInstall, Mode=TwoWay}" >
+                <CheckBox FontSize="14" IsChecked="{Binding Path=SkipNpmInstall, Mode=TwoWay}" >
                     <TextBlock>
-                        Skip installing NPM packages
+                        Skip installing npm packages
                     </TextBlock>
                 </CheckBox>
-                <TextBlock TextWrapping="Wrap" >
+                <TextBlock TextWrapping="Wrap" Margin="0, 5" >
                     If the checkbox is <Italic>selected</Italic>, an installation will run during the first build of the project.
                     <LineBreak></LineBreak>If the checkbox is <Italic>unselected</Italic>, an installation process will start in the background immediately after the project has been created.
-                    <LineBreak></LineBreak><Italic>Note</Italic>: If you close and reopen the project, Visual Studio will automatically start installing NPM packages.
+                    <LineBreak></LineBreak><Italic>Note</Italic>: If you close and reopen the project, Visual Studio will automatically start installing npm packages.
                     <LineBreak></LineBreak>
-                    <Hyperlink x:Name="LearnMoreSkipInstall" NavigateUri="https://github.com/andfomin/NgProjectTemplate#skipinstall" RequestNavigate="LearnMoreSkipInstall_RequestNavigate" >
+                    <Hyperlink x:Name="LearnMoreSkipNpmInstall" NavigateUri="https://github.com/andfomin/NgProjectTemplate#skipnpminstall" RequestNavigate="LearnMoreSkipNpmInstall_RequestNavigate" >
                         Learn more ...
                     </Hyperlink>
                 </TextBlock>

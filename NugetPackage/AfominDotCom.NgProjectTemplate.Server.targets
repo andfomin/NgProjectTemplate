@@ -2,7 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <Target Name="FirstNpmInstall" BeforeTargets="BeforeBuild" Condition="!Exists('$(MSBuildProjectDirectory)\node_modules')">
-    <Message Text="------ Initial installation of NPM packages ------" Importance="high" />
+    <Message Text="------ Initial installation of npm packages ------" Importance="high" />
     <Message Text="node --version" Importance="high" />
     <Exec Command="node --version" />
     <Message Text="npm --version" Importance="high" />
@@ -11,7 +11,7 @@
     <Exec Command="npm install --only=production" WorkingDirectory="$(MSBuildProjectDirectory)" />
     <Message Text="npm install --only=development" Importance="high" />
     <Exec Command="npm install --only=development" WorkingDirectory="$(MSBuildProjectDirectory)" />
-    <Message Text="------ Finished installing NPM packages ------" Importance="high" />
+    <Message Text="------ Finished installing npm packages ------" Importance="high" />
     <Message Text=" " Importance="high" />
   </Target>
 

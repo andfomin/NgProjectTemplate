@@ -32,7 +32,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizard
             RequestNavigate(e);
         }
 
-        private void LearnMoreSkipInstall_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        private void LearnMoreSkipNpmInstall_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
             RequestNavigate(e);
         }

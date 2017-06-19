@@ -15,7 +15,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizard
         private const string packageJsonFileName = "package.json";
         private const string includePackageJsonElement = "<None Include=\"package.json\" />";
 
-        private bool skipInstall = true;
+        private bool skipNpmInstall = true;
         private Project project;
 
         // This method is called before opening any item that has the OpenInEditor attribute.  
@@ -88,9 +88,9 @@ namespace AfominDotCom.NgProjectTemplate.Wizard
         {
             if (this.project != null)
             {
-                // Trigger the NPM package manager built-in in Visual Studio to start installing packages.
+                // Trigger the npm package manager built-in in Visual Studio to start installing packages.
                 EnvDTE.Window packageJsonWindow = null;
-                if (!this.skipInstall)
+                if (!this.skipNpmInstall)
                 {
                     var packageJsonItem = FindProjectItem(this.project, packageJsonFileName);
                     var packageJsonFilePath = GetProjectItemExistingFilePath(packageJsonItem);
@@ -154,13 +154,13 @@ namespace AfominDotCom.NgProjectTemplate.Wizard
                 }
 
                 // Display the wizard to the user.
-                var viewModel = new WizardViewModel(projectName, isNgFound, this.skipInstall);
+                var viewModel = new WizardViewModel(projectName, isNgFound, this.skipNpmInstall);
                 var mainWindow = new WizardWindow(viewModel);
                 var accepted = mainWindow.ShowDialog().GetValueOrDefault();
 
-                this.skipInstall = viewModel.SkipInstall;
+                this.skipNpmInstall = viewModel.SkipNpmInstall;
                 // If package.json is included in the project, NPM package manager automatically starts installing packages after project creation.
-                replacementsDictionary.Add("$includepackagejson$", this.skipInstall ? String.Empty : includePackageJsonElement);
+                replacementsDictionary.Add("$includepackagejson$", this.skipNpmInstall ? String.Empty : includePackageJsonElement);
 
                 if (!accepted)
                 {

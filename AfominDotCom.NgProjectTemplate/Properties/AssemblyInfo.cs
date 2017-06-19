@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("NgProjectTemplate")]
+[assembly: AssemblyTitle("Angular CLI Project Template")]
 [assembly: AssemblyDescription("Angular CLI Project Template Wizard for Visual Studio")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("https://github.com/andfomin/NgProjectTemplate")]
 [assembly: AssemblyProduct("AfominDotCom.NgProjectTemplate")]
-[assembly: AssemblyCopyright("2017 https://github.com/andfomin/ngprojecttemplate")]
+[assembly: AssemblyCopyright("2017 Andrey Fomin, MIT Lisence")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
