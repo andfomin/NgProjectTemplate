@@ -57,6 +57,3 @@ Only the files produced by Angular CLI during the build are published to the tar
 To start a publish, right-click the project in **Solution Explorer** and choose **Publish** in the pop-up menu. Select a desired publish target on the dialog page and proceed according to your selection. The project template was tested by publishing to a local folder and to Azure App Service.
 
 As a side note, Azure App Service supports hosting of static web sites without any additional configuration or modification. Learn more [here](https://www.microsoft.com/middleeast/azureboxes/cloud-hosting-for-a-static-website.aspx) and [here](https://docs.microsoft.com/en-us/azure/app-service-web/app-service-web-get-started-html)
-
-
-`Enjoy responsibly!`

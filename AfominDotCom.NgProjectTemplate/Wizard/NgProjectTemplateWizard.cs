@@ -88,6 +88,12 @@ namespace AfominDotCom.NgProjectTemplate.Wizard
         {
             if (this.project != null)
             {
+                /* If package.json is included in the project, the npm package manager automatically starts installing packages after project creation.
+                 * An install can also be triggered by opening, saving and closing package.json.
+                 * The problem is those features are controled by two independant settings. 
+                 * We may potentially trigger the npm installer twice. Apparently runs one instance, in very-very rare cases two. 
+                 * There were errors logged couple times in the Output window which looked like a racing conflict.
+                */
                 // Trigger the npm package manager built-in in Visual Studio to start installing packages.
                 EnvDTE.Window packageJsonWindow = null;
                 if (!this.skipNpmInstall)
@@ -145,9 +151,12 @@ namespace AfominDotCom.NgProjectTemplate.Wizard
                 replacementsDictionary.TryGetValue("$solutiondirectory$", out solutionDirectory);
 
                 // Test if @angular/cli is installed globally.
-                var isNgFound = false;
+                var isNgFound = true;
                 var desktopDirectory = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-                if (Directory.Exists(desktopDirectory))
+                var workingDirectory = Directory.Exists(destinationDirectory) 
+                    ? destinationDirectory
+                    : (Directory.Exists(desktopDirectory) ? desktopDirectory : null);
+                if (!String.IsNullOrEmpty(workingDirectory))
                 {
                     var ngVersionOutput = RunNgVersion(desktopDirectory);
                     isNgFound = ngVersionOutput.Contains(NgVersionSuccessFragment);
@@ -159,23 +168,31 @@ namespace AfominDotCom.NgProjectTemplate.Wizard
                 var accepted = mainWindow.ShowDialog().GetValueOrDefault();
 
                 this.skipNpmInstall = viewModel.SkipNpmInstall;
-                // If package.json is included in the project, NPM package manager automatically starts installing packages after project creation.
+                // If package.json is included in the project, the npm package manager automatically starts installing packages after project creation.
                 replacementsDictionary.Add("$includepackagejson$", this.skipNpmInstall ? String.Empty : includePackageJsonElement);
 
                 if (!accepted)
                 {
-                    throw new WizardCancelledException();
+                    throw new WizardCancelledException("The wizard has been cancelled by the user.");
                 }
             }
             catch
             {
+                DateTime projectDirCreationTime = DateTime.MinValue;
                 if (Directory.Exists(destinationDirectory))
                 {
+                    projectDirCreationTime = Directory.GetCreationTimeUtc(destinationDirectory);
                     Directory.Delete(destinationDirectory, true);
                 }
                 if (Directory.Exists(solutionDirectory))
                 {
-                    Directory.Delete(solutionDirectory, true);
+                    // The solution could exist before the template started.
+                    // This is a poor man's method of deciding whether the solution dir was created at about the same time as the project dir.
+                    var solutionDirCreationTime = Directory.GetCreationTimeUtc(solutionDirectory);
+                    if (Math.Abs((projectDirCreationTime - solutionDirCreationTime).TotalSeconds) < 5)
+                    {
+                        Directory.Delete(solutionDirectory, true);
+                    }
                 }
                 throw;
             }
