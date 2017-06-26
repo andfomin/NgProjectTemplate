@@ -15,7 +15,8 @@ namespace AfominDotCom.NgProjectTemplate.Wizard
         private const string packageJsonFileName = "package.json";
         private const string includePackageJsonElement = "<None Include=\"package.json\" />";
 
-        private bool skipNpmInstall = true;
+        private bool skipNpmInstall;
+        private bool addRouting;
         private Project project;
 
         // This method is called before opening any item that has the OpenInEditor attribute.  
@@ -47,7 +48,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizard
                     File.Delete(packageJsonFilePath);
                 }
                 // Run "ng new"
-                ngNewOutput = RunNgNew(projectDirectory, project.Name);
+                ngNewOutput = RunNgNew(projectDirectory, project.Name, this.addRouting);
             }
 
             // Find the file created by the "ng new".
@@ -163,13 +164,15 @@ namespace AfominDotCom.NgProjectTemplate.Wizard
                 }
 
                 // Display the wizard to the user.
-                var viewModel = new WizardViewModel(projectName, isNgFound, this.skipNpmInstall);
+                var viewModel = new WizardViewModel(projectName, isNgFound);
                 var mainWindow = new WizardWindow(viewModel);
                 var accepted = mainWindow.ShowDialog().GetValueOrDefault();
 
                 this.skipNpmInstall = viewModel.SkipNpmInstall;
                 // If package.json is included in the project, the npm package manager automatically starts installing packages after project creation.
                 replacementsDictionary.Add("$includepackagejson$", this.skipNpmInstall ? String.Empty : includePackageJsonElement);
+
+                this.addRouting = viewModel.AddRouting;
 
                 if (!accepted)
                 {
@@ -230,9 +233,10 @@ namespace AfominDotCom.NgProjectTemplate.Wizard
             return RunCmdSync(cmdArguments, workingDirectory);
         }
 
-        public static string RunNgNew(string workingDirectory, string projectName)
+        public static string RunNgNew(string workingDirectory, string projectName, bool addRouting)
         {
-            var cmdArguments = $"/c ng new {projectName} --directory . --skip-git --skip-install";
+            var routingOption = addRouting ? " --routing" : String.Empty;
+            var cmdArguments = $"/c ng new {projectName} --directory .{routingOption} --skip-git --skip-install";
             return RunCmdSync(cmdArguments, workingDirectory);
         }
 

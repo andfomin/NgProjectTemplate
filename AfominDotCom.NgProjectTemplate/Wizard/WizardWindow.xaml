@@ -5,12 +5,24 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AfominDotCom.NgProjectTemplate.Wizard"
         mc:Ignorable="d"
-        Width="576" Height="324" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" 
+        Width="480" Height="360" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" 
         ShowInTaskbar="False" Title="{Binding Path=WindowTitle}" Icon="pack://application:,,,/AfominDotCom.NgProjectTemplate;component/Resources/NgProjectTemplateIcon.ico"  
         FocusManager.FocusedElement="{Binding ElementName=OkButton}"
         >
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <Style x:Key="OptionStyle" TargetType="CheckBox">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Margin" Value="0,15,0,0"/>
+        </Style>
+        <Style x:Key="CommentStyle" TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="10,0" />
+        </Style>
+        <Style x:Key="CommandStyle" TargetType="Run">
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -20,26 +32,38 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <StackPanel Orientation="Vertical" Margin="30, 30" >
+        <StackPanel Orientation="Vertical" Margin="30, 5" >
             <TextBlock x:Name="NgNotFoundText" TextWrapping="Wrap" 
                        Visibility="{Binding Path=IsNgNotFound, Converter={StaticResource BooleanToVisibilityConverter}}" >
                 <Run FontWeight="SemiBold">WARNING</Run>
                 <LineBreak></LineBreak>It looks like Angular CLI is not installed globally.
                 <LineBreak></LineBreak>If you proceed with the project creation, you can manually create an Angular CLI application within the project folder later on.
                 <LineBreak></LineBreak>
-                <Hyperlink x:Name="LearnMoreNgNotFound" NavigateUri="https://github.com/angular/angular-cli#installation" RequestNavigate="LearnMoreNgNotFound_RequestNavigate" >
-                    Learn how to install Angular CLI ...
+                <Hyperlink x:Name="LearnMoreNgNotFound" NavigateUri="https://github.com/andfomin/NgProjectTemplate#installation" RequestNavigate="LearnMoreNgNotFound_RequestNavigate" >
+                    Learn more ...
                 </Hyperlink>
             </TextBlock>
             <StackPanel Orientation="Vertical" 
                         Visibility="{Binding Path=IsNgFound, Converter={StaticResource BooleanToVisibilityConverter}}" >
-                <CheckBox FontSize="14" IsChecked="{Binding Path=SkipNpmInstall, Mode=TwoWay}" >
+                <CheckBox Style="{StaticResource OptionStyle}" IsChecked="{Binding Path=AddRouting, Mode=TwoWay}" >
+                    <TextBlock>
+                        Generate a routing module for the Angular application
+                    </TextBlock>
+                </CheckBox>
+                <TextBlock Style="{StaticResource CommentStyle}">
+                    Add <Run Style="{StaticResource CommandStyle}">--routing</Run> to the <Run Style="{StaticResource CommandStyle}">ng new</Run> command
+                </TextBlock>
+            </StackPanel>
+            <StackPanel Orientation="Vertical" 
+                        Visibility="{Binding Path=IsNgFound, Converter={StaticResource BooleanToVisibilityConverter}}" >
+                <CheckBox Style="{StaticResource OptionStyle}" IsChecked="{Binding Path=SkipNpmInstall, Mode=TwoWay}">
                     <TextBlock>
                         Skip installing npm packages
                     </TextBlock>
                 </CheckBox>
-                <TextBlock TextWrapping="Wrap" Margin="0, 5" >
-                    If the checkbox is <Italic>selected</Italic>, an installation will run during the first build of the project.
+                <TextBlock Style="{StaticResource CommentStyle}">
+                    Add <Run Style="{StaticResource CommandStyle}">--skip-install</Run> to the <Run Style="{StaticResource CommandStyle}">ng new</Run> command
+                    <LineBreak></LineBreak>If the checkbox is <Italic>selected</Italic>, an installation will run during the first build of the project.
                     <LineBreak></LineBreak>If the checkbox is <Italic>unselected</Italic>, an installation process will start in the background immediately after the project has been created.
                     <LineBreak></LineBreak><Italic>Note</Italic>: If you close and reopen the project, Visual Studio will automatically start installing npm packages.
                     <LineBreak></LineBreak>
@@ -48,7 +72,6 @@
                     </Hyperlink>
                 </TextBlock>
             </StackPanel>
-
         </StackPanel>
 
         <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Bottom" 
