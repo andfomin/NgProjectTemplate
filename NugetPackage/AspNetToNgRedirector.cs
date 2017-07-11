@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace AfominDotCom.NgProjectTemplate.Server
@@ -15,7 +16,12 @@ namespace AfominDotCom.NgProjectTemplate.Server
 
         #region Constants
 
+        /// <summary>
+        /// The NgServerPort setting is depricated
+        /// </summary>
         private const string NgServerPortSettingName = "NgServerPort";
+
+        private const string NgServeOptionsSettingName = "NgServeOptions";
         private const string packageJsonFileName = "package.json";
         private const int DefaultNgServerPort = 4200;
         private const string RedirectionPageUrl = "/redirect-to-ng-server";
@@ -28,6 +34,10 @@ namespace AfominDotCom.NgProjectTemplate.Server
   }
   span.my-red {
     color: red;
+  }
+  span.my-code {
+    font-family: monospace;
+    background-color: #eee;
   }
 </style>
 ";
@@ -116,7 +126,9 @@ turning off the setting <strong><i>Enable JavaScript Debugging for ASP.NET (Chro
 <br/>
 To specify a different port, open the project's Properties page and select the Debug tab. 
 <br/>
-Add an Environment Variable named <strong>ASPNETCORE_NgServerPort</strong> and specify the port number as its Value.
+Add an Environment Variable named <strong>ASPNETCORE_NgServeOptions</strong> and enter <span class='my-code'><strong>--port Number</strong></span> as its Value.
+<br/>
+<a href='https://github.com/angular/angular-cli/wiki/serve' target='_blank'>Learn more about the options available in &quot;ng serve&quot;.</a>
 </p>
 </body>
 </html>
@@ -141,53 +153,35 @@ Add an Environment Variable named <strong>ASPNETCORE_NgServerPort</strong> and s
              * We serve a page from ASP.NET Core that redirects the browser from the IIS Express to the NG Development Server.
              */
 
-            var webHostBuilder = new WebHostBuilder();
-
-            var ngServerPortSetting = webHostBuilder.GetSetting(NgServerPortSettingName);
-            if (!Int32.TryParse(ngServerPortSetting, out int ngServerPort))
-            {
-                ngServerPort = DefaultNgServerPort;
-            }
-
-
             // Visual Studio writes Byte Order Mark when saves files. 
             // Webpack fails reading such a package.json. +https://github.com/webpack/enhanced-resolve/issues/87
             // Athough the docs claim that VS is aware of the special case of package.json, 
             // apparently VS fails to recognize the file when the template wizard saves it during the project creation.
-            var packageJsonFilePath = Path.Combine(Directory.GetCurrentDirectory(), packageJsonFileName);
-            if (File.Exists(packageJsonFilePath))
-            {
-                StripBomFromFile(packageJsonFilePath);
-            }
+            EnsurePackageJsonFileHasNoBom();
 
-            // An NG Develpment Server may have already been started manually from the Command Prompt. If that's the case, inform the user how to specify another port.
-            bool isNgServerPortAvailable = true;
-            using (var netstatProcess = new Process())
-            {
-                netstatProcess.StartInfo.FileName = "cmd.exe";
-                netstatProcess.StartInfo.Arguments = $"/c netstat.exe -a -n -p TCP | findstr LISTENING | findstr :{ngServerPort}";
-                netstatProcess.StartInfo.UseShellExecute = false;
-                netstatProcess.StartInfo.RedirectStandardOutput = true;
-                netstatProcess.Start();
-                var netstatOutput = netstatProcess.StandardOutput.ReadToEnd();
-                netstatProcess.WaitForExit();
+            var webHostBuilder = new WebHostBuilder();
 
-                isNgServerPortAvailable = String.IsNullOrWhiteSpace(netstatOutput);
-            }
+            string ngServeOptions = GetNgServeOptions(webHostBuilder);
 
             // Run "ng serve". For ASP.NET applications the working directory is the project root.
-            var ngProcess = Process.Start("cmd.exe", $"/k start ng.cmd serve --port {ngServerPort}");
+            var ngProcess = Process.Start("cmd.exe", "/k start ng.cmd serve"
+              + (!String.IsNullOrWhiteSpace(ngServeOptions) ? " " + ngServeOptions : String.Empty));
+
+            var ngServerPort = GetNgServerPort(ngServeOptions);
+            // An NG Develpment Server may have already been started manually from the Command Prompt. Check if that is the case.
+            bool isNgServerPortAvailable = IsNgServerPortAvailable(ngServerPort);
 
             var startPage = (isNgServerPortAvailable
-               ? (StartPage
-               .Replace("{{RedirectionPageUrl}}", RedirectionPageUrl)
-               .Replace("{{DebuggerWarning}}", (Debugger.IsAttached ? DebuggerWarning : ""))
-               )
-               : PortUnavailableErrorPage
-               )
-               .Replace("{{NgServerPort}}", ngServerPort.ToString())
-               .Replace("{{StyleSection}}", StyleSection)
-               ;
+              ? (StartPage
+              .Replace("{{RedirectionPageUrl}}", RedirectionPageUrl)
+              .Replace("{{DebuggerWarning}}", (Debugger.IsAttached ? DebuggerWarning : String.Empty))
+              )
+              // Inform the developer how to specify another port.
+              : PortUnavailableErrorPage
+              )
+              .Replace("{{NgServerPort}}", ngServerPort.ToString())
+              .Replace("{{StyleSection}}", StyleSection)
+              ;
 
             var redirectionPage = RedirectionPage
               .Replace("{{NgServerPort}}", ngServerPort.ToString());
@@ -235,10 +229,46 @@ Add an Environment Variable named <strong>ASPNETCORE_NgServerPort</strong> and s
         }
 
         /// <summary>
-        /// Reads the file, looks for a Byte Order Mark and if a BOM found, writes the file back without a BOM.
+        /// Read the custom "ng serve" options from the Environment Variable, if present.
+        /// </summary>
+        /// <param name="webHostBuilder"></param>
+        /// <returns>The options string. May return null if the Environment Variable was not found.</returns>
+        private static string GetNgServeOptions(WebHostBuilder webHostBuilder)
+        {
+            var ngServeOptions = webHostBuilder.GetSetting(NgServeOptionsSettingName);
+            if (!String.IsNullOrWhiteSpace(ngServeOptions))
+            {
+                ngServeOptions = ngServeOptions.Trim();
+            }
+            else
+            {
+                // The NgServerPort setting is depricated.
+                var ngServerPortSetting = webHostBuilder.GetSetting(NgServerPortSettingName);
+                if (Int32.TryParse(ngServerPortSetting, out int port))
+                {
+                    ngServeOptions = $"--port {port}";
+                }
+            }
+            return ngServeOptions;
+        }
+
+        /// <summary>
+        /// Find the package.json file and make sure it has no BOM
+        /// </summary>
+        private static void EnsurePackageJsonFileHasNoBom()
+        {
+            var packageJsonFilePath = Path.Combine(Directory.GetCurrentDirectory(), packageJsonFileName);
+            if (File.Exists(packageJsonFilePath))
+            {
+                EnsureFileHasNoBom(packageJsonFilePath);
+            }
+        }
+
+        /// <summary>
+        /// Reads the file, looks for a Byte Order Mark and if a BOM is found, writes the file back without a BOM.
         /// </summary>
         /// <param name="filePath"></param>
-        private static void StripBomFromFile(string filePath)
+        private static void EnsureFileHasNoBom(string filePath)
         {
             var memoryStream = new MemoryStream();
             using (var fileReader = new FileStream(filePath, FileMode.Open, FileAccess.Read))
@@ -268,5 +298,63 @@ Add an Environment Variable named <strong>ASPNETCORE_NgServerPort</strong> and s
             }
         }
 
+        /// <summary>
+        /// Parses NgServeOptions, if present, and looks for a custom port value. If it is not found, returns the DefaultNgServerPort value.
+        /// </summary>
+        /// <param name="ngServeOptions"></param>
+        /// <param name="defaultValue"></param>
+        /// <returns>The custom port value, if found. Otherwise, returns the DefaultNgServerPort value</returns>
+        private static int GetNgServerPort(string ngServeOptions)
+        {
+            if (!String.IsNullOrWhiteSpace(ngServeOptions))
+            {
+                // Our pattern does not capture negative values. If the value is negative, the "ng serve" displays an error message.
+                string pattern = @"--port\s+(\w+)\s*";
+                MatchCollection matches = Regex.Matches(ngServeOptions, pattern, RegexOptions.IgnoreCase);
+                // Force the regular expression engine to find all matches at once (otherwise it enumerates match-by-match lazily).
+                var count = matches.Count;
+                if (count > 0)
+                {
+                    var match = matches[count - 1]; // When "ng serve" runs, the last occurence of "--port foo" wins even if it is not a number.
+                    var value = match.Groups[1].Value; // Groups[0] is the match itself.
+                    if (Int32.TryParse(value, out int ngServerPort))
+                    {
+                        return ngServerPort;
+                    }
+                }
+            }
+            // If the value is not valid, the "ng serve" falls back to the default value.
+            return DefaultNgServerPort;
+        }
+
+        /// <summary>
+        /// An NG Develpment Server might be started manually from the Command Prompt. Check if that is the case.
+        /// </summary>
+        /// <param name="ngServerPort"></param>
+        /// <returns></returns>
+        private static bool IsNgServerPortAvailable(int ngServerPort)
+        {
+            // Be optimistic. If the check fails, the CLI will report the conflict anyway.
+            bool isNgServerPortAvailable = true;
+            // If the value is 0, "ng serve" tries to start on 4200, 4201, 4202, 4203, and so on, until it finds an available port.
+            if (ngServerPort > 0)
+            {
+                using (var netstatProcess = new Process())
+                {
+                    netstatProcess.StartInfo.FileName = "cmd.exe";
+                    netstatProcess.StartInfo.Arguments = $"/c netstat.exe -a -n -p TCP | findstr LISTENING | findstr :{ngServerPort}";
+                    netstatProcess.StartInfo.UseShellExecute = false;
+                    netstatProcess.StartInfo.RedirectStandardOutput = true;
+                    netstatProcess.Start();
+                    var netstatOutput = netstatProcess.StandardOutput.ReadToEnd();
+                    netstatProcess.WaitForExit();
+
+                    isNgServerPortAvailable = String.IsNullOrWhiteSpace(netstatOutput);
+                }
+            }
+            return isNgServerPortAvailable;
+        }
+
     }
+
 }
