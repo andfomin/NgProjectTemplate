@@ -35,9 +35,12 @@ namespace AfominDotCom.NgProjectTemplate.Server
   span.my-red {
     color: red;
   }
-  span.my-code {
+  code.my-code {
     font-family: monospace;
-    background-color: #eee;
+    font-size: 85%;
+    padding: 0.1em;
+    border-radius: 3px;
+    background-color: #f1f1f1;
   }
 </style>
 ";
@@ -126,7 +129,7 @@ turning off the setting <strong><i>Enable JavaScript Debugging for ASP.NET (Chro
 <br/>
 To specify a different port, open the project's Properties page and select the Debug tab. 
 <br/>
-Add an Environment Variable named <strong>ASPNETCORE_NgServeOptions</strong> and enter <span class='my-code'><strong>--port Number</strong></span> as its Value.
+Add an Environment Variable named <strong>ASPNETCORE_NgServeOptions</strong> and enter <strong><code class='my-code'>--port Number</code></strong> (for example <code class='my-code'>--port 4201</code>) as its Value.
 <br/>
 <a href='https://github.com/angular/angular-cli/wiki/serve' target='_blank'>Learn more about the options available in &quot;ng serve&quot;.</a>
 </p>

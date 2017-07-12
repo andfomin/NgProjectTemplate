@@ -28,7 +28,7 @@ If you have decided to skip installing npm packages during a project creation, a
 
 If you have opted to install npm packages immediately after the project creation, the template will trigger an npm install. You might want to switch the **Output** window to the **Bower/npm** mode to observe the process.
 
-Please note that regardless of your choice, Visual Studio may trigger npm install on opening of a project and as soon as you save any changes to the *package.json* file. This feature is described [here](https://webtooling.visualstudio.com/package-managers/npm/). To control this feature, navigate in the IDE to **Tools –> Options –> Projects and Solutions –> Web Package Management –> Package Restore**. 
+Please note that regardless of your choice, Visual Studio may trigger npm install on opening of a project and as soon as you save any changes to the *package.json* file. This feature is described [here](https://webtooling.visualstudio.com/package-managers/npm/). To control this feature, navigate in the IDE to **Tools ï¿½> Options ï¿½> Projects and Solutions ï¿½> Web Package Management ï¿½> Package Restore**. 
 
 The version of npm preinstalled with Visual Studio 2017 apparently meets the Angular CLI requirements. But the version of the Node.js executable which is preinstalled with Visual Studio 2017 does not entirely satisfy the Angular CLI requirements. As a result, you may see non-critical warnings during Angular CLI installation. If you want to use the globally installed Node and npm in Visual Studio, you can find the instructions [here](https://blogs.msdn.microsoft.com/webdev/2015/03/19/customize-external-web-tools-in-visual-studio-2015/)
 
@@ -37,16 +37,16 @@ The version of npm preinstalled with Visual Studio 2017 apparently meets the Ang
 
 Run the project by pressing **F5**. The project is started by Visual Studio as an ASP.NET Core application which in turn launches the genuine Angular CLI Development Server, redirects the launched web browser to it and exits afterwards.
 
+This project relies on the default hosting settings stored in the *Properties\launchSettings.json* file. That file is controlled by Visual Studio, do not edit it manually. Its contents correspond to the **Debug** tab on the project's **Properties** dialog page. Make sure the **IIS Express** profile is selected as active. Although that is the default setting, sometimes the other profile may unexpectedly get active. That would cause no problem, but confusion when starting the project.
+
+NG Development Server uses port 4200 by default. If that port is already in use, you may want to specify a different port. To do that, open the project's **Properties** page and select the **Debug** tab. Add an Environment Variable named `ASPNETCORE_NgServeOptions` and enter `--port Number` (for example `--port 4201`) as its Value. The Value stored in `ASPNETCORE_NgServeOptions` is passed to `ng serve` as is. You can use that setting to customize the NG Development Server. Find more about the options available in `ng serve` [here](https://github.com/angular/angular-cli/wiki/serve).
+
 Since the project does not have server-side code to debug and since Angular CLI does not support the JavaScript Debugging feature in Visual Studio anyway, you might prefer to start the project without debugging by pressing **Ctrl+F5** in Visual Studio instead and then open Developer Tools by pressing **F12** in the browser.
 
 Alternatively, you may want to disable JavaScript debugging in Visual Studio by going to **Tools -> Options -> Debugging -> General** and turning off the setting **Enable JavaScript Debugging for ASP.NET (Chrome and IE)**. Learn more about JavaScript debugging in Visual Studio [here](https://aka.ms/chromedebugging). If you keep the JavaScript Debugging feature in Visual Studio enabled, then you may face the following effects:
 * Opening Developer Tools in Chrome stops the script debugging session
 * The Hot Module Replacement feature of Angular CLI breaks code mapping
 * If you close the browser window manually, then stopping the debugger in Visual Studio will take longer than usual.
-
-This project relies on the default hosting settings stored in the *Properties\launchSettings.json* file. That file is controlled by Visual Studio, do not edit it manually. Its contents correspond to the **Debug** tab on the project’s **Properties** dialog page. Make sure the **IIS Express** profile is selected as active. Although that is the default setting, sometimes the other profile may unexpectedly get active. That would cause no problem, but confusion when starting the project.
-
-NG Development Server uses port 4200 by default. If that port is already in use, you may want to specify a different port. To do that, open the project's **Properties** page and select the **Debug** tab. Add an **Environment Variable** named `ASPNETCORE_NgServerPort` and specify the port number as its **Value**.
 
 # Building and publishing the Angular application.
 
