@@ -28,7 +28,7 @@ If you have decided to skip installing npm packages during a project creation, a
 
 If you have opted to install npm packages immediately after the project creation, the template will trigger an npm install. You might want to switch the **Output** window to the **Bower/npm** mode to observe the process.
 
-Please note that regardless of your choice, Visual Studio may trigger npm install on opening of a project and as soon as you save any changes to the *package.json* file. This feature is described [here](https://webtooling.visualstudio.com/package-managers/npm/). To control this feature, navigate in the IDE to **Tools �> Options �> Projects and Solutions �> Web Package Management �> Package Restore**. 
+Please note that regardless of your choice, Visual Studio may trigger npm install on opening of a project and as soon as you save any changes to the *package.json* file. This feature is described [here](https://webtooling.visualstudio.com/package-managers/npm/). To control this feature, navigate in the IDE to **Tools > Options > Projects and Solutions > Web Package Management > Package Restore**. 
 
 The version of npm preinstalled with Visual Studio 2017 apparently meets the Angular CLI requirements. But the version of the Node.js executable which is preinstalled with Visual Studio 2017 does not entirely satisfy the Angular CLI requirements. As a result, you may see non-critical warnings during Angular CLI installation. If you want to use the globally installed Node and npm in Visual Studio, you can find the instructions [here](https://blogs.msdn.microsoft.com/webdev/2015/03/19/customize-external-web-tools-in-visual-studio-2015/)
 
