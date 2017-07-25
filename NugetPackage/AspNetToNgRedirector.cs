@@ -71,10 +71,11 @@ namespace AfominDotCom.NgProjectTemplate.Server
 
     function doXHR() {
       var xhr = new XMLHttpRequest();
-      var timeout = setTimeout(onTimeout(xhr), 2000);
+      var timeout = setTimeout(onTimeout(xhr), 5000);
       xhr.open('GET', ngUrl, true);
       xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4 && xhr.status == 200) {
+        /* Accept 404 in the case when the apps/index setting in .angular-cli.json has been changed to anything else than index.html */
+        if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 404)) {
           clearTimeout(timeout);
           location.href = '{{RedirectionPageUrl}}';
         }
