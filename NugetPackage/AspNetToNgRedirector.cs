@@ -4,9 +4,14 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace AfominDotCom.NgProjectTemplate.Server
 {
@@ -24,6 +29,7 @@ namespace AfominDotCom.NgProjectTemplate.Server
         private const string NgServeOptionsSettingName = "NgServeOptions";
         private const string packageJsonFileName = "package.json";
         private const int DefaultNgServerPort = 4200;
+        private const string PollingUrl = "/poll-proxy";
         private const string RedirectionPageUrl = "/redirect-to-ng-server";
 
         private const string StyleSection = @"
@@ -60,8 +66,6 @@ namespace AfominDotCom.NgProjectTemplate.Server
   </div>
 
   <script>
-    const ngUrl = 'http://localhost:{{NgServerPort}}/';
-
     function onTimeout(xhr) {
       return function () {
         xhr.abort();
@@ -72,10 +76,11 @@ namespace AfominDotCom.NgProjectTemplate.Server
     function doXHR() {
       var xhr = new XMLHttpRequest();
       var timeout = setTimeout(onTimeout(xhr), 5000);
-      xhr.open('GET', ngUrl, true);
+      xhr.open('GET', '{{PollingUrl}}');
       xhr.onreadystatechange = function () {
-        /* Accept 404 in the case when the apps/index setting in .angular-cli.json has been changed to anything else than index.html */
-        if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 404)) {
+        // Accept 404 if the apps/index setting in .angular-cli.json has been changed to anything else than index.html. 
+        // Status 204 comes from our HTTPS proxy.
+        if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 204 || xhr.status == 404)) {
           clearTimeout(timeout);
           location.href = '{{RedirectionPageUrl}}';
         }
@@ -98,18 +103,18 @@ namespace AfominDotCom.NgProjectTemplate.Server
 <li>The Hot Module Replacement feature breaks code mapping</li>
 <li>If you close the browser window manually, then stopping the debugger in Visual Studio will take longer than usual</li>
 </ul>
-<p>
-You can ignore this note and continue using this browser window.
-</p>
+<p><strong>
+You can ignore this notification and continue using this browser window.
+</strong></p>
 <p>
 As another option, you can start your project without debugging by pressing Ctrl+F5 in Visual Studio and
 <br/>
 then open Developer Tools by pressing F12 in the browser.
 </p>
 <p>
-Alternatively, you can disable JavaScript debugging in Visual Studio by going to <strong><i>Tools -> Options -> Debugging -> General</i></strong> and
+Alternatively, you can disable JavaScript debugging in Visual Studio by going to <i>Tools -> Options -> Debugging -> General</i> and
 <br/>
-turning off the setting <strong><i>Enable JavaScript Debugging for ASP.NET (Chrome and IE)</i></strong>.
+turning off the setting <i>Enable JavaScript Debugging for ASP.NET (Chrome and IE)</i>.
 </p>
 <p>
 <a href='https://aka.ms/chromedebugging' target='_blank'>Learn more about JavaScript debugging in Visual Studio</a>
@@ -141,7 +146,7 @@ Add an Environment Variable named <strong>ASPNETCORE_NgServeOptions</strong> and
         private const string RedirectionPage = @"<!DOCTYPE html>
 <html>
 <head>
-  <meta http-equiv='refresh' content='0; url=http://localhost:{{NgServerPort}}/'/>
+  <meta http-equiv='refresh' content='0; url={{NgServerProtocol}}://localhost:{{NgServerPort}}/'/>
 </head>
 <body>
 </body>
@@ -171,23 +176,25 @@ Add an Environment Variable named <strong>ASPNETCORE_NgServeOptions</strong> and
             var ngProcess = Process.Start("cmd.exe", "/k start ng.cmd serve"
               + (!String.IsNullOrWhiteSpace(ngServeOptions) ? " " + ngServeOptions : String.Empty));
 
+            var ngServerProtocol = GetNgServerProtocol(ngServeOptions);
             var ngServerPort = GetNgServerPort(ngServeOptions);
             // An NG Develpment Server may have already been started manually from the Command Prompt. Check if that is the case.
             bool isNgServerPortAvailable = IsNgServerPortAvailable(ngServerPort);
 
             var startPage = (isNgServerPortAvailable
               ? (StartPage
+              .Replace("{{PollingUrl}}", ngServerProtocol == "https" ? PollingUrl : $"http://localhost:{ngServerPort}/")
               .Replace("{{RedirectionPageUrl}}", RedirectionPageUrl)
               .Replace("{{DebuggerWarning}}", (Debugger.IsAttached ? DebuggerWarning : String.Empty))
               )
               // Inform the developer how to specify another port.
               : PortUnavailableErrorPage
               )
-              .Replace("{{NgServerPort}}", ngServerPort.ToString())
               .Replace("{{StyleSection}}", StyleSection)
               ;
 
             var redirectionPage = RedirectionPage
+              .Replace("{{NgServerProtocol}}", ngServerProtocol)
               .Replace("{{NgServerPort}}", ngServerPort.ToString());
 
             // We use a CancellationToken for shutting down the Kestrel server after the redirection page has been sent to the browser.
@@ -203,6 +210,10 @@ Add an Environment Variable named <strong>ASPNETCORE_NgServeOptions</strong> and
                   {
                       case "/":
                           await context.Response.WriteAsync(startPage);
+                          break;
+                      case PollingUrl:
+                          var isNgServerReady = await IsNgServerReady(ngServerProtocol, ngServerPort, cancellationToken);
+                          context.Response.StatusCode = isNgServerReady ? StatusCodes.Status204NoContent : StatusCodes.Status503ServiceUnavailable;
                           break;
                       case RedirectionPageUrl:
                           await context.Response.WriteAsync(redirectionPage);
@@ -332,6 +343,17 @@ Add an Environment Variable named <strong>ASPNETCORE_NgServeOptions</strong> and
         }
 
         /// <summary>
+        /// Searches for the SSL option in NgServeOptions and returns "http" or "https" depending on the presense of the option.
+        /// </summary>
+        /// <param name="ngServeOptions"></param>
+        /// <returns>String "http" or "https"</returns>
+        private static string GetNgServerProtocol(string ngServeOptions)
+        {
+            var isSSL = !String.IsNullOrWhiteSpace(ngServeOptions) && (ngServeOptions.IndexOf("--ssl") >= 0);
+            return isSSL ? "https" : "http";
+        }
+
+        /// <summary>
         /// An NG Develpment Server might be started manually from the Command Prompt. Check if that is the case.
         /// </summary>
         /// <param name="ngServerPort"></param>
@@ -359,6 +381,77 @@ Add an Environment Variable named <strong>ASPNETCORE_NgServeOptions</strong> and
             return isNgServerPortAvailable;
         }
 
-    }
+        /// <summary>
+        /// Calls the NG server and reports whether it is ready.
+        /// </summary>
+        /// <param name="protocol"></param>
+        /// <param name="port"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>bool</returns>
+        private static async Task<bool> IsNgServerReady(string protocol, int port, CancellationToken cancellationToken)
+        {
+            /* Webpack uses a self-signed certificate and it is not trusted by the browser until an exception is added by the user manually.
+             * We cannot poll HTTPS from the browser. The browser does not report the actual reason for a connection failure to JavaScript in the case of an untrusted certificate. So we have no means to distinguish between the server being unavailable and a certificate error.
+             * We use a server-side HttpClient to recognize a certificate error.
+             * But Visual Studio launches Chrome with a separate debug user profile. That Chrome instance does not see the certificate exception added by the regular user profile. We need to redirect to the Ng home page under the debug profile to give the user a chance to see the security warning page and add a certificate exception manually.             
+             */
+            var result = false;
 
+            using (var client = new HttpClient())
+            {
+                client.Timeout = TimeSpan.FromSeconds(20);
+                using (var requestMessage = new HttpRequestMessage())
+                {
+                    requestMessage.Method = HttpMethod.Get;
+                    requestMessage.RequestUri = new Uri($"{protocol}://localhost:{port}");
+                    requestMessage.Headers.Host = $"localhost:{port}";
+                    requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
+
+                    try
+                    {
+                        using (var responseMessage = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken))
+                        {
+                            // Returns 404 if the apps/index setting in .angular-cli.json has been changed to something else than index.html
+                            var readyStatusCodes = new[] { HttpStatusCode.OK, HttpStatusCode.NotFound };
+                            if (readyStatusCodes.Contains(responseMessage.StatusCode))
+                            {
+                                result = true;
+                            }
+                        }
+                    }
+                    catch (HttpRequestException exception)
+                    {
+                        // HttpRequestException InnerException: System.Net.Http.WinHttpException 
+                        // Port: HResult -2147012867 = 0x80072EFD Message "A connection with the server could not be established" ERROR_WINHTTP_CANNOT_CONNECT 12029 = 0x2EFD
+                        // SSL:	 HResult -2147012721 = 0x80072F8F Message "A security error occurred" ERROR_WINHTTP_SECURE_FAILURE 12175 = 0x2F8F
+                        const int SecurityErrorHResult = -2147012721;
+
+                        if (exception.HResult == SecurityErrorHResult)
+                        {
+                            result = true;
+                        }
+                        else
+                        {
+                            var innerException = exception.InnerException;
+                            if (innerException != null)
+                            {
+                                // var innerExceptionName = innerException.GetType().FullName; // "System.Net.Http.WinHttpException"
+                                if (innerException.HResult == SecurityErrorHResult)
+                                {
+                                    result = true;
+                                }
+                            }
+                        }
+
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+
+                return result;
+            }
+
+        }
+    }
 }
