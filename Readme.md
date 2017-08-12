@@ -60,4 +60,4 @@ As a side note, Azure App Service supports hosting of static web sites without a
 
 # Have fun
 
-As a demonstration of how it is really easy to use the tempate, I have created a video [Create an Angular app and get it on the web in four minutes without touching the keyboard!](https://www.youtube.com/watch?v=yeiNhJb-524) [![Create an Angular app and get it on the web in four minutes without touching the keyboard!](https://user-images.githubusercontent.com/3043428/27361781-bc19ed74-55f7-11e7-89fe-98ee894a0c41.png)](https://www.youtube.com/watch?v=yeiNhJb-524)
+As a demonstration of how it is really easy to use the tempate, I have created a video [Create an Angular app and publish it on the web in four minutes without touching the keyboard!](https://www.youtube.com/watch?v=yeiNhJb-524) [![Create an Angular app and publish it on the web in four minutes without touching the keyboard!](https://user-images.githubusercontent.com/3043428/27361781-bc19ed74-55f7-11e7-89fe-98ee894a0c41.png)](https://www.youtube.com/watch?v=yeiNhJb-524)
