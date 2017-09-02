@@ -27,7 +27,7 @@ namespace AfominDotCom.NgProjectTemplate.Server
         private const string NgServerPortSettingName = "NgServerPort";
 
         private const string NgServeOptionsSettingName = "NgServeOptions";
-        private const string packageJsonFileName = "package.json";
+        private const string PackageJsonFileName = "package.json";
         private const int DefaultNgServerPort = 4200;
         private const string PollingUrl = "/poll-proxy";
         private const string RedirectionPageUrl = "/redirect-to-ng-server";
@@ -272,7 +272,7 @@ Add an Environment Variable named <strong>ASPNETCORE_NgServeOptions</strong> and
         /// </summary>
         private static void EnsurePackageJsonFileHasNoBom()
         {
-            var packageJsonFilePath = Path.Combine(Directory.GetCurrentDirectory(), packageJsonFileName);
+            var packageJsonFilePath = Path.Combine(Directory.GetCurrentDirectory(), PackageJsonFileName);
             if (File.Exists(packageJsonFilePath))
             {
                 EnsureFileHasNoBom(packageJsonFilePath);
