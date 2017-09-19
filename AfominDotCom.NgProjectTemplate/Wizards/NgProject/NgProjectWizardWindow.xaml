@@ -1,9 +1,9 @@
-﻿<Window x:Class="AfominDotCom.NgProjectTemplate.Wizard.WizardWindow"
+﻿<Window x:Class="AfominDotCom.NgProjectTemplate.Wizards.NgProjectWizardWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:AfominDotCom.NgProjectTemplate.Wizard"
+        xmlns:local="clr-namespace:AfominDotCom.NgProjectTemplate.Wizards"
         mc:Ignorable="d"
         Width="480" Height="360" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" 
         ShowInTaskbar="False" Title="{Binding Path=WindowTitle}" Icon="pack://application:,,,/AfominDotCom.NgProjectTemplate;component/Resources/NgProjectTemplateIcon.ico"  
@@ -12,12 +12,16 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <Style x:Key="OptionStyle" TargetType="CheckBox">
-            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontSize" Value="16" />
             <Setter Property="Margin" Value="0,15,0,0"/>
+        </Style>
+        <Style x:Key="OptionTextStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,-3,0,0"/>
         </Style>
         <Style x:Key="CommentStyle" TargetType="TextBlock">
             <Setter Property="TextWrapping" Value="Wrap" />
             <Setter Property="Margin" Value="10,0" />
+            <Setter Property="Foreground" Value="#FF404040" />
         </Style>
         <Style x:Key="CommandStyle" TargetType="Run">
             <Setter Property="FontFamily" Value="Consolas" />
@@ -46,7 +50,7 @@
             <StackPanel Orientation="Vertical" 
                         Visibility="{Binding Path=IsNgFound, Converter={StaticResource BooleanToVisibilityConverter}}" >
                 <CheckBox Style="{StaticResource OptionStyle}" IsChecked="{Binding Path=AddRouting, Mode=TwoWay}" >
-                    <TextBlock>
+                    <TextBlock Style="{StaticResource OptionTextStyle}">
                         Generate a routing module for the Angular application
                     </TextBlock>
                 </CheckBox>
@@ -57,7 +61,7 @@
             <StackPanel Orientation="Vertical" 
                         Visibility="{Binding Path=IsNgFound, Converter={StaticResource BooleanToVisibilityConverter}}" >
                 <CheckBox Style="{StaticResource OptionStyle}" IsChecked="{Binding Path=SkipNpmInstall, Mode=TwoWay}">
-                    <TextBlock>
+                    <TextBlock Style="{StaticResource OptionTextStyle}">
                         Skip installing npm packages
                     </TextBlock>
                 </CheckBox>

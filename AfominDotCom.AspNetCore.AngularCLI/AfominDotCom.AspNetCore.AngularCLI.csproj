@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.3</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.2</Version>
+    <AssemblyVersion>1.0.2.0</AssemblyVersion>
+    <FileVersion>1.0.2.0</FileVersion>
+    <Copyright>Copyright 2017</Copyright>
+    <PackageLicenseUrl>https://github.com/andfomin/NgProjectTemplate/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/andfomin/NgProjectTemplate</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/andfomin/NgProjectTemplate/master/Icon32.png</PackageIconUrl>
+    <RepositoryUrl></RepositoryUrl>
+    <RepositoryType></RepositoryType>
+    <PackageTags>asp net core;angular;angular cli</PackageTags>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <Authors>Andrey Fomin</Authors>
+    <Product>NgProjectTemplate</Product>
+    <Company>Andrey Fomin</Company>
+    <Description>This package is used to host an Angular CLI application in an ASP.NET Core project. It is part of the Angular CLI Project Template that you can find in the Online section of the New Project dialog in Visual Studio 2017.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="build\AfominDotCom.AspNetCore.AngularCLI.props" />
+    <None Remove="build\AfominDotCom.AspNetCore.AngularCLI.targets" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="build\AfominDotCom.AspNetCore.AngularCLI.props">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Pack>true</Pack>
+      <PackagePath>build\</PackagePath>
+    </Content>
+    <Content Include="build\AfominDotCom.AspNetCore.AngularCLI.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Pack>true</Pack>
+      <PackagePath>build\</PackagePath>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Proxy" Version="0.2.0" />
+    <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
+  </ItemGroup>
+
+  <Target Name="CopyPackage" AfterTargets="Pack">
+    <Copy SourceFiles="$(OutputPath)..\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="$(registry:HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders@Personal)\My\LocalNugetSource" />
+  </Target>
+
+</Project>

@@ -1,10 +1,10 @@
 ﻿using AfominDotCom.NgProjectTemplate.Resources;
 using System;
 
-namespace AfominDotCom.NgProjectTemplate.Wizard
+namespace AfominDotCom.NgProjectTemplate.Wizards
 {
 
-    public class WizardViewModel
+    public class NgProjectWizardViewModel
     {
         public string WindowTitle { get; set; }
         public bool IsNgFound { get; set; }
@@ -16,7 +16,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizard
             get { return !this.IsNgFound; }
         }
 
-        public WizardViewModel(string projectName, bool isNgFound)
+        public NgProjectWizardViewModel(string projectName, bool isNgFound)
         {
             this.WindowTitle = String.Format(WizardResources.WindowTitle, projectName); 
             this.IsNgFound = isNgFound;

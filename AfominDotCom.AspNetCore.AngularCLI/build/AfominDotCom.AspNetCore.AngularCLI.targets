@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Target Name="FirstNpmInstall" BeforeTargets="BeforeBuild" Condition="!Exists('$(MSBuildProjectDirectory)\node_modules\@angular\cli')">
+    <Message Text="------ Initial installation of npm packages for Angular CLI ------" Importance="high" />
+    <Message Text="node --version" Importance="high" />
+    <Exec Command="node --version" />
+    <Message Text="npm --version" Importance="high" />
+    <Exec Command="npm --version" />
+    <Message Text="npm install --only=production" Importance="high" />
+    <Exec Command="npm install --only=production" WorkingDirectory="$(MSBuildProjectDirectory)" />
+    <Message Text="npm install --only=development" Importance="high" />
+    <Exec Command="npm install --only=development" WorkingDirectory="$(MSBuildProjectDirectory)" />
+    <Message Text="------ Finished installing npm packages ------" Importance="high" />
+    <Message Text=" " Importance="high" />
+  </Target>
+
+  <Target Name="NgBuild" AfterTargets="ComputeFilesToPublish">
+    <Message Text=" " Importance="high" />
+    <Exec Command="npm run | findstr &quot;build:$(Configuration)&quot;" ConsoleToMSBuild="true" IgnoreExitCode="true" EchoOff="true" WorkingDirectory="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="NpmScriptName" />
+    </Exec>
+    <Exec Condition=" '$(NpmScriptName)'=='build:$(Configuration)' " Command="npm run $(NpmScriptName)" />
+    <Exec Condition=" '$(NpmScriptName)'!='build:$(Configuration)' " Command="npm run build" />
+
+    <ItemGroup>
+      <DistFiles Include="dist\**" />
+      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>%(DistFiles.Identity)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+
+</Project>

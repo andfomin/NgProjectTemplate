@@ -157,8 +157,8 @@ Add an Environment Variable named <strong>ASPNETCORE_NgServeOptions</strong> and
 
         public static void Main(string[] args)
         {
-            /* Visual Studio configures IIS Express to host an Kestrel server.
-             * When we start debugging, Visual Studio starts the IIS Express which in turn starts the Kestrel server, then launches a browser and points it to the IIS Express. 
+            /* Visual Studio configures IIS Express to host a Kestrel server.
+             * When we run the project, Visual Studio starts the IIS Express which in turn starts the Kestrel server, then launches a browser and points it to the IIS Express. 
              * We serve a page from ASP.NET Core that redirects the browser from the IIS Express to the NG Development Server.
              */
 
@@ -173,8 +173,9 @@ Add an Environment Variable named <strong>ASPNETCORE_NgServeOptions</strong> and
             string ngServeOptions = GetNgServeOptions(webHostBuilder);
 
             // Run "ng serve". For ASP.NET applications the working directory is the project root.
+            // TODO AF20170914 Assign explicitly ngProcess.StartInfo.WorkingDirectory = Directory.GetCurrentDirectory();
             var ngProcess = Process.Start("cmd.exe", "/k start ng.cmd serve"
-              + (!String.IsNullOrWhiteSpace(ngServeOptions) ? " " + ngServeOptions : String.Empty));
+              + (!String.IsNullOrWhiteSpace(ngServeOptions) ? " " + ngServeOptions : String.Empty)); // TODO AF20170914. Simplify: ngServeOptions??String.Empty
 
             var ngServerProtocol = GetNgServerProtocol(ngServeOptions);
             var ngServerPort = GetNgServerPort(ngServeOptions);

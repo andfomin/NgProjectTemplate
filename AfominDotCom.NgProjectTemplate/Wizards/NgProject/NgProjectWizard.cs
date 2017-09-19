@@ -6,11 +6,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-namespace AfominDotCom.NgProjectTemplate.Wizard
+namespace AfominDotCom.NgProjectTemplate.Wizards
 {
-    public class NgProjectTemplateWizard : IWizard
+    public class NgProjectWizard : IWizard
     {
         private const string NgVersionSuccessFragment = "@angular/cli";
+        private const string gitignoreFileName = ".gitignore";
+        private const string gitignoreTempFileName = ".gitignore.temp";
         private const string readmeMdFileName = "README.md";
         private const string packageJsonFileName = "package.json";
         private const string includePackageJsonElement = "<None Include=\"package.json\" />";
@@ -47,8 +49,26 @@ namespace AfominDotCom.NgProjectTemplate.Wizard
                 {
                     File.Delete(packageJsonFilePath);
                 }
+                // Starting from ver.1.4, the CLI creates a ".gitignore" file even if the "--ignore-git" option is specified. So "ng new --ignore-git" fails if there is an existing .gitignore in the directory.
+                // +https://github.com/angular/angular-cli/issues/7686
+                var gitignoreFilePath = Path.Combine(projectDirectory, gitignoreFileName);
+                var gitignoreTempFilePath = Path.Combine(projectDirectory, gitignoreTempFileName);
+                if (File.Exists(gitignoreFilePath))
+                {
+                    File.Move(gitignoreFilePath, gitignoreTempFilePath);
+                }
+
                 // Run "ng new"
                 ngNewOutput = RunNgNew(projectDirectory, project.Name, this.addRouting);
+
+                if (File.Exists(gitignoreTempFilePath))
+                {
+                    if (File.Exists(gitignoreFilePath))
+                    {
+                        File.Delete(gitignoreFilePath);
+                    }
+                    File.Move(gitignoreTempFilePath, gitignoreFilePath);
+                }
             }
 
             // Find the file created by the "ng new".
@@ -93,7 +113,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizard
                  * An install can also be triggered by opening, saving and closing package.json.
                  * The problem is those features are controled by two independant settings. 
                  * We may potentially trigger the npm installer twice. Apparently runs one instance, in very-very rare cases two. 
-                 * There were errors logged couple times in the Output window which looked like a racing conflict.
+                 * There were errors logged a couple of times in the Output window which looked like a racing conflict.
                 */
                 // Trigger the npm package manager built-in in Visual Studio to start installing packages.
                 EnvDTE.Window packageJsonWindow = null;
@@ -154,18 +174,18 @@ namespace AfominDotCom.NgProjectTemplate.Wizard
                 // Test if @angular/cli is installed globally.
                 var isNgFound = true;
                 var desktopDirectory = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-                var workingDirectory = Directory.Exists(destinationDirectory) 
+                var workingDirectory = Directory.Exists(destinationDirectory)
                     ? destinationDirectory
                     : (Directory.Exists(desktopDirectory) ? desktopDirectory : null);
                 if (!String.IsNullOrEmpty(workingDirectory))
                 {
-                    var ngVersionOutput = RunNgVersion(desktopDirectory);
+                    var ngVersionOutput = RunNgVersion(workingDirectory);
                     isNgFound = ngVersionOutput.Contains(NgVersionSuccessFragment);
                 }
 
                 // Display the wizard to the user.
-                var viewModel = new WizardViewModel(projectName, isNgFound);
-                var mainWindow = new WizardWindow(viewModel);
+                var viewModel = new NgProjectWizardViewModel(projectName, isNgFound);
+                var mainWindow = new NgProjectWizardWindow(viewModel);
                 var accepted = mainWindow.ShowDialog().GetValueOrDefault();
 
                 this.skipNpmInstall = viewModel.SkipNpmInstall;
@@ -274,7 +294,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizard
 
         private static Version GetVersion()
         {
-            return typeof(AfominDotCom.NgProjectTemplate.Wizard.NgProjectTemplateWizard).Assembly.GetName().Version;
+            return typeof(AfominDotCom.NgProjectTemplate.Wizards.NgProjectWizard).Assembly.GetName().Version;
         }
 
     }

@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="NgItemWindowTitle" xml:space="preserve">
+    <value>Add Angular CLI application</value>
+  </data>
   <data name="ReadmeFailureMessage" xml:space="preserve">
     <value>Something went wrong with the creation of an Angular CLI application.\n\n</value>
   </data>
