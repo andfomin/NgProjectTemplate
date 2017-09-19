@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AfominDotCom.NgProjectTemplate.Server" Version="1.0.4" />
+    <PackageReference Include="AfominDotCom.NgProjectTemplate.Server" Version="1.0.5" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,8 +34,12 @@
 
   <Target Name="NgBuildAndAddToPublishOutput" AfterTargets="ComputeFilesToPublish">
     <Message Text=" " Importance="high" />
-    <Exec Command="npm run build" />
-
+    <Exec Command="npm run | findstr &quot;build:$(Configuration)&quot;" ConsoleToMSBuild="true" IgnoreExitCode="true" EchoOff="true" WorkingDirectory="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="NpmScriptName" />
+    </Exec>
+    <Exec Condition=" '$(NpmScriptName)'=='build:$(Configuration)' " Command="npm run $(NpmScriptName)" />
+    <Exec Condition=" '$(NpmScriptName)'!='build:$(Configuration)' " Command="npm run build" />
+    
     <ItemGroup>
       <DistFiles Include="dist\**" />
       <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">

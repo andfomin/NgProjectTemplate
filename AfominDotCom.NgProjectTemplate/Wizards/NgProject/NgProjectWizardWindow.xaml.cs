@@ -3,15 +3,15 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Navigation;
 
-namespace AfominDotCom.NgProjectTemplate.Wizard
+namespace AfominDotCom.NgProjectTemplate.Wizards
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class WizardWindow : Window
+    public partial class NgProjectWizardWindow : Window
     {
 
-        public WizardWindow(WizardViewModel viewModel)
+        public NgProjectWizardWindow(NgProjectWizardViewModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;

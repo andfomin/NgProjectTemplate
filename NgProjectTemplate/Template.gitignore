@@ -1,4 +1,4 @@
-## ------------ Begin the Angular CLI section ------------
+## ------------ Begin Angular CLI section ------------
 
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
@@ -43,9 +43,9 @@ testem.log
 .DS_Store
 Thumbs.db
 
-## ------------ End the Angular CLI section ------------
+## ------------ End Angular CLI section ------------
 
-## ------------ Begin the Visual Studio section ------------
+## ------------ Begin Visual Studio section ------------
 
 /Properties/launchSettings.json
 
@@ -171,4 +171,4 @@ UpgradeLog*.htm
 # Node.js Tools for Visual Studio
 .ntvs_analysis.dat
 
-## ------------ End the Visual Studio section ------------
+## ------------ End Visual Studio section ------------

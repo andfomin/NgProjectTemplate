@@ -1,0 +1,117 @@
+﻿<Window x:Class="AfominDotCom.NgProjectTemplate.Wizards.NgItemWizardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AfominDotCom.NgProjectTemplate.Wizards"
+        mc:Ignorable="d"
+        Width="480" Height="360" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" 
+        ShowInTaskbar="False" Title="{Binding Path=WindowTitle}" Icon="pack://application:,,,/AfominDotCom.NgProjectTemplate;component/Resources/NgProjectTemplateIcon.ico"  
+        FocusManager.FocusedElement="{Binding ElementName=OkButton}"
+        >
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <Style x:Key="InstallRadioStyle" TargetType="RadioButton">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Margin" Value="0,15,0,0"/>
+        </Style>
+        <Style x:Key="InstallTextStyle" TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="0,-2,0,0"/>
+        </Style>
+        <Style x:Key="WarningStyle" TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="0,10"/>
+        </Style>
+        <Style x:Key="FileOpenedTextStyle" TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="0,2"/>
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Orientation="Vertical" Margin="30, 5" >
+            <TextBlock x:Name="AngularCliFoundText" Style="{StaticResource WarningStyle}" 
+                       Visibility="{Binding Path=DisplayAngularCliJsonFoundWarning, Converter={StaticResource BooleanToVisibilityConverter}}" >
+                <Run FontWeight="SemiBold">WARNING</Run>
+                <LineBreak></LineBreak>This project has already got an Angular&#160;CLI application.
+                <LineBreak></LineBreak>
+                <Hyperlink x:Name="LearnMoreAngularCliJsonFound" NavigateUri="https://github.com/andfomin/NgProjectTemplate" RequestNavigate="LearnMore_RequestNavigate" >
+                    Learn more ...
+                </Hyperlink>
+            </TextBlock>
+            <TextBlock x:Name="NgNotFoundText" Style="{StaticResource WarningStyle}" 
+                       Visibility="{Binding Path=DisplayNgNotFoundWarning, Converter={StaticResource BooleanToVisibilityConverter}}" >
+                <Run FontWeight="SemiBold">WARNING</Run>
+                <LineBreak></LineBreak>It looks like Angular&#160;CLI is not installed globally.
+                <LineBreak></LineBreak>
+                <Hyperlink x:Name="LearnMoreNgNotFound" NavigateUri="https://github.com/andfomin/NgProjectTemplate" RequestNavigate="LearnMore_RequestNavigate" >
+                    Learn more ...
+                </Hyperlink>
+            </TextBlock>
+            <TextBlock Style="{StaticResource WarningStyle}" 
+                       Visibility="{Binding Path=DisplayFileOpenedWarning, Converter={StaticResource BooleanToVisibilityConverter}}" >
+                <Run FontWeight="SemiBold">WARNING</Run>
+                <TextBlock Style="{StaticResource FileOpenedTextStyle}" 
+                       Visibility="{Binding Path=DisplayGitignoreOpened, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    The existing <Run FontWeight="SemiBold">.gitignore</Run> file needs to be modified. Automatic installation is disabled because the file is currently opened in an editor window.
+                </TextBlock>
+                <TextBlock Style="{StaticResource FileOpenedTextStyle}" 
+                       Visibility="{Binding Path=DisplayPackageJsonOpened, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    The existing <Run FontWeight="SemiBold">package.json</Run> file needs to be modified. Automatic installation is disabled because the file is currently opened in an editor window.
+                </TextBlock>               
+                <TextBlock Style="{StaticResource FileOpenedTextStyle}" 
+                       Visibility="{Binding Path=DisplayStartupCsOpened, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    The existing <Run FontWeight="SemiBold">Startup.cs</Run> file needs to be modified. Automatic installation is disabled because the file is currently opened in an editor window.
+                </TextBlock>               
+                <Hyperlink NavigateUri="https://github.com/andfomin/NgProjectTemplate" RequestNavigate="LearnMore_RequestNavigate" >
+                    Learn more ...
+                </Hyperlink>
+            </TextBlock>
+            <StackPanel Orientation="Vertical">
+                <RadioButton Style="{StaticResource InstallRadioStyle}" GroupName="InstallMode" IsChecked="True">
+                    <TextBlock Style="{StaticResource InstallTextStyle}">
+                        Install only the Readme file describing how to manually add an Angular&#160;CLI application to the project.
+                    </TextBlock>
+                </RadioButton>
+                <RadioButton Style="{StaticResource InstallRadioStyle}" GroupName="InstallMode" IsChecked="{Binding Path=InstallAutomatically}"
+                             IsEnabled="{Binding Path=IsInstallAutomaticallyEnabled}">
+                    <TextBlock Style="{StaticResource InstallTextStyle}">
+                       Add an Angular&#160;CLI application to the project automatically.
+                    </TextBlock>
+                </RadioButton>
+                <TextBlock Margin="0,5,0,0">
+                    <Hyperlink x:Name="LearnMoreInstallAutomatically" NavigateUri="https://github.com/andfomin/NgProjectTemplate" RequestNavigate="LearnMore_RequestNavigate" >
+                        Learn more ...
+                    </Hyperlink>
+                </TextBlock>
+                <!--<CheckBox Style="{StaticResource OptionStyle}" IsChecked="{Binding Path=InstallAutomatically, Mode=OneWay}">
+                    <TextBlock>
+                        test
+                    </TextBlock>
+                </CheckBox>-->
+                <TextBlock x:Name="PackageJsonWarning" Style="{StaticResource WarningStyle}" 
+                       Visibility="{Binding Path=DisplayOldPackageJsonWarning, Converter={StaticResource BooleanToVisibilityConverter}}" >
+                <Run FontWeight="SemiBold">WARNING</Run>
+                <LineBreak></LineBreak>An existing <Run FontWeight="SemiBold">package.json</Run> file was found. If you proceed, it will be merged with the <Run FontWeight="SemiBold">package.json</Run> generated by Angular&#160;CLI. Review the merged <Run FontWeight="SemiBold">package.json</Run> afterwards.
+                <LineBreak></LineBreak>
+                <Hyperlink x:Name="LearnMorePackageJson" NavigateUri="https://github.com/andfomin/NgProjectTemplate" RequestNavigate="LearnMore_RequestNavigate" >
+                    Learn more ...
+                </Hyperlink>
+                </TextBlock>
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+                    Orientation="Horizontal" Height="30" Margin="0,0,20,20" >
+            <Button Content="OK" Width="80" x:Name="OkButton" IsDefault="True" Click="OnClickOk" />
+            <Button Content="Cancel" Width="80" Margin="10,0,0,0" IsCancel="True" Click="OnClickCancel" />
+        </StackPanel>
+    </Grid>
+</Window>

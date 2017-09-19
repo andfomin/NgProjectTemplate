@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005" xmlns:sdk="http://schemas.microsoft.com/developer/vstemplate-sdkextension/2010" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <TemplateData>
+    <Name>Angular CLI application</Name>
+    <Description>This item template adds an Angular CLI application to an ASP.NET Core project. The project will launch the original NG Development Server.</Description>
+    <Icon>NgProjectTemplateIcon.ico</Icon>
+    <PreviewImage>NgProjectTemplatePreview.png</PreviewImage>
+    <TemplateID>AspNetCore.AngularCLI.3bc97a39-1536-40da-955a-9802da61ef60</TemplateID>
+    <ProjectType>CSharp</ProjectType>
+    <TemplateGroupID>AspNetCore</TemplateGroupID>
+    <!--<NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>-->
+    <DefaultName>Readme_AngularCLI.txt</DefaultName>
+  </TemplateData>
+  <TemplateContent>
+    <ProjectItem ReplaceParameters="false">Readme_AngularCLI.txt</ProjectItem>
+  </TemplateContent>
+  <WizardExtension>
+    <Assembly>AfominDotCom.NgProjectTemplate, Version=1.0.7.0, Culture=Neutral, PublicKeyToken=53bcf0057ad908c4</Assembly>
+    <FullClassName>AfominDotCom.NgProjectTemplate.Wizards.NgItemWizard</FullClassName>
+  </WizardExtension>
+  <WizardExtension>
+    <Assembly>NuGet.VisualStudio.Interop, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
+    <FullClassName>NuGet.VisualStudio.TemplateWizard</FullClassName>
+  </WizardExtension>
+  <WizardData>
+    <packages repository="extension" repositoryId="AfominDotCom.NgProjectTemplate.4e23e6f4-6f2c-4b66-8670-513bbc233486">
+      <package id="AfominDotCom.AspNetCore.AngularCLI" version="1.0.2" />
+    </packages>
+    <!--<Assets>
+      <Asset Type="AfominDotCom.AspNetCore.AngularCLI.0.0.3.nupkg" d:Source="File" Path="Packages\AfominDotCom.AspNetCore.AngularCLI.0.0.3.nupkg" d:VsixSubPath="Packages" />
+    </Assets>-->
+  </WizardData>
+</VSTemplate>
