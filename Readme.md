@@ -1,6 +1,6 @@
 # Introduction
 
-NgProjectTemplate is a set of two templates that create Angular CLI applications in Visual Studio 2017. There is a template that adds Angular CLI to an existing ASP.NET Core project. Another template creates an Angular CLI application as a static website project.
+This is a set of two templates that create Angular CLI applications in Visual Studio 2017. There is a template that adds Angular CLI to an existing ASP.NET Core project. Another template creates an Angular CLI application as a static website project.
 
 The Item Template adds an Angular CLI application to an existing ASP.NET Core 2.0 project. The main project launches the standard NG Development Server during development and routes requests to it, so the Angular application is available on the same port as the ASP.NET application. During a Release build and deployment, the template calls Angular CLI to build the application and copies the files over to the standard wwwroot folder to make them available at the same path as the path specified during development. 
 
@@ -8,7 +8,7 @@ The project created by the Project Template is a customized ASP.NET Core project
 
 ### Installing the templates
 
-You can find the templates in Visual Studio by opening either the **New Item** dialog or the **New Project** dialog and navigating to the **Online** - **Templates** section. Use the Search box to look for "angular cli". Both the templates come packaged together in a single Visual Studio Extension file.
+You can find the templates in Visual Studio 2017 by opening either the **New Item** dialog or the **New Project** dialog and navigating to the **Online** - **Templates** section. Use the Search box to look for "angular cli". Both the templates come packaged together in a single Visual Studio Extension file.
 
 Alternatively, you can download the Extension file from the Visual Studio Marketplace and install it manually.
 
@@ -24,7 +24,7 @@ Learn more ...
 * <a id="itemwiz-nong"></a>It looks like Angular&#160;CLI is not installed globally.
 Learn more ...
 
-* <a id="itemwiz-fileopened"></a>The existing file _name_ needs to be modified.
+* <a id="itemwiz-fileopened"></a>The existing file needs to be modified.
 Learn more ...
 
 * <a id="itemwiz-options"></a>Add an Angular&#160;CLI application to the project automatically.
