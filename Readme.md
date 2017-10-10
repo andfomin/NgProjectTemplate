@@ -1,16 +1,43 @@
 # Introduction
 
-NgProjectTemplate is a project template which creates an Angular CLI application as a Visual Studio project. 
+NgProjectTemplate is a set of two templates that create Angular CLI applications in Visual Studio 2017. There is a template that adds Angular CLI to an existing ASP.NET Core project. Another template creates an Angular CLI application as a static website project.
 
-The project is basically a customized ASP.NET Core project which shares the root folder with the Angular CLI application and is an adapter between the traditional development experience in Visual Studio and the infrastructure provided by Angular CLI.
+The Item Template adds an Angular CLI application to an existing ASP.NET Core 2.0 project. The main project launches the standard NG Development Server during development and routes requests to it, so the Angular application is available on the same port as the ASP.NET application. During a Release build and deployment, the template calls Angular CLI to build the application and copies the files over to the standard wwwroot folder to make them available at the same path as the path specified during development. 
 
-# Installing the project template
+The project created by the Project Template is a customized ASP.NET Core project that hosts an Angular CLI application and is an adapter between the traditional development experience in Visual Studio and the infrastructure provided by Angular CLI. It deploys only Angular CLI files and no any server-side assemblies during publishing.
 
-You can find the template in Visual Studio by opening the **New Project** dialog and navigating to the **Online** section. Use the Search box to look up the Angular CLI Application project template.
+### Installing the templates
 
-Alternatively, you can download the VSIX file and install it in Visual Studio manually. The template will be installed under the TypeScript category.
+You can find the templates in Visual Studio by opening either the **New Item** dialog or the **New Project** dialog and navigating to the **Online** - **Templates** section. Use the Search box to look for "angular cli". Both the templates come packaged together in a single Visual Studio Extension file.
 
-# <a id="projwiz-nong"></a>Creating a project
+Alternatively, you can download the Extension file from the Visual Studio Marketplace and install it manually.
+
+<br/>   
+
+# The folowing topics are related to the Item Template. 
+
+### Messages shown during an application creation
+
+* <a id="itemwiz-gotng"></a>This project has already got an Angular&#160;CLI application.
+Learn more ...
+
+* <a id="itemwiz-nong"></a>It looks like Angular&#160;CLI is not installed globally.
+Learn more ...
+
+* <a id="itemwiz-fileopened"></a>The existing file _name_ needs to be modified.
+Learn more ...
+
+* <a id="itemwiz-options"></a>Add an Angular&#160;CLI application to the project automatically.
+Learn more ...
+
+* <a id="itemwiz-mergepackagejson"></a>An existing package.json file was found.
+Learn more ...
+
+<br/>   
+
+# The folowing topics are related to the Project Template.
+
+### <a id="projwiz-nong"></a>Creating a project
 
 Open the standard **New Project** dialog, navigate to Angular CLI Application template, specify the project name and its location, as well as whether to initialize a Git repository for the project.
 
@@ -22,7 +49,7 @@ Angular CLI is a Node application which uses npm modules installed locally in th
 
 A custom *.gitignore* file with combined settings for Visual Studio and Angular CLI is always added to the project root.
 
-# <a id="projwiz-skipnpm"></a>Installing npm modules.
+### <a id="projwiz-skipnpm"></a>Installing npm modules.
 
 If you have decided to skip installing npm packages during a project creation, an initial npm install will be postponed until the first **Build** or **Run** of the project. An npm install will be executed during the first **Build** only if there is no *node_modules* folder found under the project root. That process uses the globally installed Node and npm executables.
 
@@ -33,7 +60,7 @@ Please note that regardless of your choice, Visual Studio may trigger npm instal
 The version of npm preinstalled with Visual Studio 2017 apparently meets the Angular CLI requirements. But the version of the Node.js executable which is preinstalled with Visual Studio 2017 does not entirely satisfy the Angular CLI requirements. As a result, you may see non-critical warnings during Angular CLI installation. If you want to use the globally installed Node and npm in Visual Studio, you can find the instructions [here](https://blogs.msdn.microsoft.com/webdev/2015/03/19/customize-external-web-tools-in-visual-studio-2015/)
 
 
-# Running the project.
+### Running the project.
 
 Run the project by pressing **F5**. The project is started by Visual Studio as an ASP.NET Core application which in turn launches the genuine Angular CLI Development Server, redirects the launched web browser to it and exits afterwards.
 
@@ -48,7 +75,7 @@ Alternatively, you may want to disable JavaScript debugging in Visual Studio by 
 * The Hot Module Replacement feature of Angular CLI breaks code mapping
 * If you close the browser window manually, then stopping the debugger in Visual Studio will take longer than usual.
 
-# Building and publishing the Angular application.
+### Building and publishing the Angular application.
 
 The project executes `npm run build` during a **Publish** process. You can customize the build options by editing the predefined **build** task in the *package.json* file.
 
@@ -58,6 +85,6 @@ To start a publish, right-click the project in **Solution Explorer** and choose 
 
 As a side note, Azure App Service supports hosting of static web sites without any additional configuration or modification. Learn more [here](https://www.microsoft.com/middleeast/azureboxes/cloud-hosting-for-a-static-website.aspx) and [here](https://docs.microsoft.com/en-us/azure/app-service-web/app-service-web-get-started-html)
 
-# Have fun
+### Have fun
 
 As a demonstration of how it is really easy to use the tempate, I have created a video [Create an Angular app and publish it on the web in four minutes without touching the keyboard!](https://www.youtube.com/watch?v=yeiNhJb-524) [![Create an Angular app and publish it on the web in four minutes without touching the keyboard!](https://user-images.githubusercontent.com/3043428/27361781-bc19ed74-55f7-11e7-89fe-98ee894a0c41.png)](https://www.youtube.com/watch?v=yeiNhJb-524)
