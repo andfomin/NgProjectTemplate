@@ -1,10 +1,8 @@
-﻿using AfominDotCom.NgProjectTemplate.Resources;
-using EnvDTE;
+﻿using EnvDTE;
 using Microsoft.VisualStudio.TemplateWizard;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,7 +13,10 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
     public class NgItemWizard : IWizard
     {
         internal static string LineBreak = Environment.NewLine;
+        private const string OpeningBrace = "{";
+        private const string ClosingBrace = "}";
 
+        private bool isNgFound;
         private bool installAutomatically;
 
         // This method is called before opening any item that has the OpenInEditor attribute.  
@@ -36,9 +37,10 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             {
                 string ngNewOutput = String.Empty;
                 bool? ngNewSucceeded = null;
-                bool? mergedGitignoreFiles = null;
                 bool? mergedPackageJsonFiles = null;
+                bool? modifiedAngularCliJson = null;
                 bool? modifiedStartupSc = null;
+                bool? mergedGitignoreFiles = null;
 
                 var projectDirectory = Path.GetDirectoryName(project.FullName);
                 if (Directory.Exists(projectDirectory))
@@ -50,34 +52,40 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                     PreserveExistingFile(projectDirectory, NgWizardHelper.PackageJsonFileName, NgWizardHelper.PackageJsonOldFileName);
 
                     // Run "ng new"
-                    ngNewOutput = NgWizardHelper.RunNgNew(projectDirectory, project.Name);
+                    ngNewOutput = NgWizardHelper.RunNgNew(projectDirectory, project.Name, true, this.isNgFound);
 
                     // Find the .angular-cli.json created by "ng new".
                     ngNewSucceeded = NgWizardHelper.FindFileInRootDir(project, NgWizardHelper.AngularCliJsonFileName);
 
                     if (ngNewSucceeded.Value)
                     {
-                        mergedGitignoreFiles = MergeGitignoreFile(projectDirectory);
                         mergedPackageJsonFiles = MergePackageJsonFiles(projectDirectory);
-                        modifiedStartupSc = ModifyStartupFile(projectDirectory);
+                        modifiedAngularCliJson = ModifyAngularCliJsonFile(projectDirectory);
+                        modifiedStartupSc = ModifyStartupCsFile(projectDirectory);
+                        mergedGitignoreFiles = MergeGitignoreFile(projectDirectory);
                     }
                 }
 
                 // Report success/failure of the steps.
                 var ngNewReport = (ngNewSucceeded.GetValueOrDefault()
                     ? "An Angular CLI application was added to the project using the item template version " + NgWizardHelper.GetVersion().ToString()
-                    : "Something went wrong with the creation of an Angular CLI application." + LineBreak + "  Error message: " + ngNewOutput
+                    : "Something went wrong with the creation of an Angular CLI application." +
+                    (this.isNgFound ? LineBreak + "  Error message: " + ngNewOutput : "")
                     ) + LineBreak;
-                var gitignoreReport = mergedGitignoreFiles.HasValue
-                   ? "Merging the .gitignore files: " + GetResultText(mergedGitignoreFiles.Value) + LineBreak
-                   : String.Empty;
                 var packageJsonReport = mergedPackageJsonFiles.HasValue
-                   ? "Merging the package.json files: " + GetResultText(mergedPackageJsonFiles.Value) + LineBreak
+                   ? "Merging the package.json files: " + GetResultText(mergedPackageJsonFiles) + LineBreak
+                   : String.Empty;
+                var angularCliJsonReport = modifiedAngularCliJson.HasValue
+                   ? "Modifying the .angular-cli.json file: " + GetResultText(modifiedAngularCliJson) + LineBreak
                    : String.Empty;
                 var startupCsReport = modifiedStartupSc.HasValue
-                   ? "Modifying the Startup.cs file: " + GetResultText(modifiedStartupSc.Value) + LineBreak
+                   ? "Modifying the Startup.cs file: " + GetResultText(modifiedStartupSc) + LineBreak
                    : String.Empty;
-                var messageText = ngNewReport + packageJsonReport + gitignoreReport + startupCsReport + LineBreak;
+                var gitignoreReport = mergedGitignoreFiles.HasValue
+                   ? "Merging the .gitignore files: " + GetResultText(mergedGitignoreFiles) + LineBreak
+                   : String.Empty;
+
+                var messageText = ngNewReport + packageJsonReport + angularCliJsonReport + startupCsReport + gitignoreReport + LineBreak;
 
                 // Augment the item file with our message.
                 if (projectItem.FileCount != 0)
@@ -104,7 +112,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             replacementsDictionary.TryGetValue("$solutiondirectory$", out string solutionDirectory);
 
             // Test if @angular/cli is installed globally.
-            bool isNgFound = NgWizardHelper.IsNgFound(solutionDirectory);
+            this.isNgFound = NgWizardHelper.IsNgFound(solutionDirectory);
 
             bool isAngularCliJsonFound = false;
             bool isOldPackageJsonFound = false;
@@ -138,7 +146,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             }
 
             // Display the wizard to the user.
-            var viewModel = new NgItemWizardViewModel(isNgFound, isAngularCliJsonFound, isOldPackageJsonFound,
+            var viewModel = new NgItemWizardViewModel(this.isNgFound, isAngularCliJsonFound, isOldPackageJsonFound,
                 isGitignoreOpened, isPackageJsonOpened, isStartupCsOpened);
             var mainWindow = new NgItemWizardWindow(viewModel);
             var accepted = mainWindow.ShowDialog().GetValueOrDefault();
@@ -177,6 +185,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             if (File.Exists(gitignoreTempFilePath))
             {
                 var oldText = File.ReadAllText(gitignoreTempFilePath);
+                // There may be duplicate patterns in the new file after merge. Let it be.
                 var newText = oldText + GitignoreNg.GitignoreNgContent;
                 File.WriteAllText(gitignoreFilePath, newText);
                 File.Delete(gitignoreTempFilePath);
@@ -199,8 +208,6 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             const string DependenciesName = "dependencies";
             const string DevDependenciesName = "devDependencies";
             const string OldNameSuffix = "_old";
-
-            //var result = false;
 
             var filePath = Path.Combine(projectDirectory, NgWizardHelper.PackageJsonFileName);
             var oldFilePath = Path.Combine(projectDirectory, NgWizardHelper.PackageJsonOldFileName);
@@ -258,20 +265,51 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                 resultObj.Property(DependenciesName).AddAfterSelf(new JProperty(DependenciesName + OldNameSuffix, oDep ?? new JObject()));
                 resultObj.Property(DevDependenciesName).AddAfterSelf(new JProperty(DevDependenciesName + OldNameSuffix, oDev ?? new JObject()));
 
-                // Don't do: File.WriteAllText(filePath, result.ToString(), System.Text.Encoding.UTF8); // This writes a BOM. BOM causes Webpack to fail.
-                var bytes = Encoding.UTF8.GetBytes(resultObj.ToString());
-                using (var memoryStream = new MemoryStream(bytes))
-                {
-                    using (var fileStream = new FileStream(filePath, FileMode.Truncate, FileAccess.Write))
-                    {
-                        memoryStream.CopyTo(fileStream);
-                    }
-                }
-
+                NgWizardHelper.RewriteFile(filePath, resultObj.ToString());
                 return true;
             }
             catch (Exception)
             {
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Add a "baseHref" property in .angular-cli.json.
+        /// </summary>
+        /// <param name="projectDirectory"></param>
+        /// <returns></returns>
+        private bool ModifyAngularCliJsonFile(string projectDirectory)
+        {
+            const string BaseHrefPropertyName = "baseHref";
+            const string BaseHrefApi = "/";
+            const string BaseHrefMvc = "/ng/";
+
+            var projectIsMvc = Directory.Exists(Path.Combine(projectDirectory, "Views"));
+            var projectIsRazorPages = Directory.Exists(Path.Combine(projectDirectory, "Pages"));
+            var baseHrefPropertyValue = (projectIsMvc || projectIsRazorPages) ? BaseHrefMvc : BaseHrefApi;
+
+            var filePath = Path.Combine(projectDirectory, NgWizardHelper.AngularCliJsonFileName);
+            if (File.Exists(filePath))
+            {
+                var rootObj = JObject.Parse(File.ReadAllText(filePath));
+                var apps = (JArray)rootObj["apps"];
+                if ((apps != null) && apps.Any())
+                {
+                    var app = (JObject)apps[0];
+                    if (app[BaseHrefPropertyName] == null)
+                    {
+                        var knownProperty = app.Property("outDir") ?? app.Property("root");
+                        if (knownProperty != null)
+                        {
+                            var baseHrefProperty = new JProperty(BaseHrefPropertyName, baseHrefPropertyValue);
+                            knownProperty.AddAfterSelf(baseHrefProperty);
+
+                            NgWizardHelper.RewriteFile(filePath, rootObj.ToString());
+                            return true;
+                        }
+                    }
+                }
             }
             return false;
         }
@@ -293,7 +331,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             return result;
         }
 
-        private bool ModifyStartupFile(string projectDirectory)
+        private bool ModifyStartupCsFile(string projectDirectory)
         {
             var filePath = Path.Combine(projectDirectory, NgWizardHelper.StartupCsFileName);
             if (!File.Exists(filePath))
@@ -324,26 +362,74 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
 
             var codeText = File.ReadAllText(filePath);
 
-            var methodHeaderPos = codeText.IndexOf(methodHeaderLine);
-            var methodBeginPos = codeText.IndexOf("{", methodHeaderPos);
-            var ngServeSnippet = LineBreak +
-                $"if ({envVariableName}.IsDevelopment())" + LineBreak +
-                "{" + LineBreak +
-                $"{appVariableName}.RunNgServe(\"--base-href /my-ng-app/\");" + LineBreak +
-                "}" + LineBreak;
-            codeText = codeText.Insert(methodBeginPos + 1, ngServeSnippet);
+            var methodStartPos = codeText.IndexOf(methodHeaderLine);
 
-            var usingSnippet = "using AfominDotCom.AspNetCore.AngularCLI;" + LineBreak;
-            codeText = codeText.Insert(0, usingSnippet);
+            // MVC and WebAPI projects already have UseStaticFiles() inserted by their templates.
+            var useStaticFilesPos = codeText.IndexOf($"{appVariableName}.UseStaticFiles", methodStartPos);
+            var useFileServerPos = codeText.IndexOf($"{appVariableName}.UseFileServer", methodStartPos);
+            var insertUseStaticFiles = (useStaticFilesPos == -1) && (useFileServerPos == -1);
 
-            File.WriteAllText(filePath, codeText);
+            /* The position of the snippet affects the routing in the project. Middleware handlers are called in the order of registration.
+             * We serve at "/" in Empty and WebAPI, at "/ng/" in MVC and Razor Pages.
+             * WebAPI, MVC and Razor Pages have routing, we serve everything else (including 404 at dev time). 
+             * We hijack processing in the Empty project (it has a hardcoded response in app.Run()). 
+             */
+            int insertPos = codeText.IndexOf($"{appVariableName}.Run(", methodStartPos);
+            if (insertPos == -1)
+            {
+                insertPos = FindEndOfMethod(codeText, methodStartPos);
+            }
+            if (insertPos > 0)
+            {
+                insertPos = RewindWhitespaces(codeText, insertPos);
 
-            return true;
+                var ngSnippet = LineBreak +
+                    "#region /* Added by the Angular CLI template. --- BEGIN --- */" + LineBreak +
+                    $"if ({envVariableName}.IsDevelopment())" + LineBreak +
+                    "{" + LineBreak +
+                    $"{appVariableName}.UseNgProxy();" + LineBreak +
+                    "}" + LineBreak +
+                    "else" + LineBreak +
+                    "{" + LineBreak;
+                if (insertUseStaticFiles)
+                {
+                    ngSnippet = ngSnippet +
+                        $"{appVariableName}.UseStaticFiles();" + LineBreak;
+                }
+                ngSnippet = ngSnippet +
+                    $"{appVariableName}.UseNgRoute();" + LineBreak +
+                    "}" + LineBreak +
+                    "#endregion /* Added by the Angular CLI template. --- END --- */" + LineBreak + LineBreak;
+
+                codeText = codeText.Insert(insertPos, ngSnippet);
+
+                var usingSnippet = "using AfominDotCom.AspNetCore.AngularCLI;" + LineBreak;
+                codeText = codeText.Insert(0, usingSnippet);
+
+                File.WriteAllText(filePath, codeText);
+
+                return true;
+            }
+
+            return false;
         }
 
-        private string GetResultText(bool success)
+        private static int RewindWhitespaces(string text, int initialPos)
         {
-            return success ? "DONE" : "FAILED";
+            int pos = initialPos;
+            while ((pos > 0) && (text[--pos] == ' '))
+            {
+            }
+            if (pos > 0)
+            {
+                pos++;
+            }
+            return pos;
+        }
+
+        private string GetResultText(bool? success)
+        {
+            return success.HasValue ? (success.Value ? "DONE" : "FAILED") : "NOT DONE";
         }
 
         private static void PreserveExistingFile(string projectDirectory, string originalFileName, string copyFileName)
@@ -359,6 +445,42 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                 File.Move(packageJsonFilePath, packageJsonOldFilePath);
             }
         }
+
+        /// <summary>
+        /// Match opening and closing curly braces. Find the position of the closing brace corresponding to the first opening brace.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="startPos">Where to start looking for a first opening brace.</param>
+        /// <returns>May be -1 if failed to find a matching closing brace up to the end of the text</returns>
+        private int FindEndOfMethod(string text, int startPos)
+        {
+            var stack = new Stack<int>();
+
+            var firstOpening = text.IndexOf(OpeningBrace, startPos);
+            stack.Push(firstOpening);
+            var current = firstOpening;
+
+            while (stack.Count > 0)
+            {
+                var nextOpening = text.IndexOf(OpeningBrace, current + 1);
+                var nextClosing = text.IndexOf(ClosingBrace, current + 1);
+                if ((nextOpening > 0) && (nextOpening < nextClosing))
+                {
+                    stack.Push(nextOpening);
+                    current = nextOpening;
+                }
+                else
+                {
+                    stack.Pop();
+                    current = nextClosing;
+                }
+                var stackCount = stack.Count();
+            }
+
+            return current;
+        }
+
+
 
 
     }

@@ -15,21 +15,79 @@
     <Message Text=" " Importance="high" />
   </Target>
 
-  <Target Name="NgBuild" AfterTargets="ComputeFilesToPublish">
-    <Message Text=" " Importance="high" />
-    <Exec Command="npm run | findstr &quot;build:$(Configuration)&quot;" ConsoleToMSBuild="true" IgnoreExitCode="true" EchoOff="true" WorkingDirectory="$(MSBuildProjectDirectory)">
+  <ItemGroup>
+    <Content Update="src\**;e2e\**;dist\**;package.json;tslint.json;tsconfig.json" CopyToPublishDirectory="Never" />
+    <Content Update=".angular-cli.json" CopyToPublishDirectory="PreserveNewest"/>
+  </ItemGroup>
+
+  <Target Name="NgValidateBeforePublish" BeforeTargets="BeforePublish">
+    <Exec Command="ng get apps[0].outDir" ConsoleToMSBuild="true" IgnoreExitCode="true" EchoOff="true" WorkingDirectory="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="NgOutDir" />
+    </Exec>    
+    <PropertyGroup>
+      <NgOutDirExisted Condition="!Exists('$(NgOutDir)')">false</NgOutDirExisted>
+    </PropertyGroup>
+
+    <Exec Command="ng get apps[0].baseHref" ConsoleToMSBuild="true" IgnoreExitCode="true" EchoOff="true" WorkingDirectory="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="NgBaseHref" />
+    </Exec>
+    <Message Text="Path &quot;$(NgBaseHref)&quot; is specified as &quot;baseHref&quot; in .angular-cli.json." Importance="high" />
+
+    <Warning Condition="'$(NgBaseHref)' == '' Or !$(NgBaseHref.StartsWith(`/`)) Or !HasTrailingSlash('$(NgBaseHref)')" Text="A &quot;baseHref&quot; path must be specified in .angular-cli.json and it must start and end with a slash." />
+
+    <PropertyGroup>
+      <NgBaseHref Condition="'$(NgBaseHref)' == '' Or !$(NgBaseHref.StartsWith(`/`)) Or !HasTrailingSlash('$(NgBaseHref)')">/</NgBaseHref>
+    </PropertyGroup>
+
+    <!-- Deleting an existing file in this task with BeforeTargets="BeforePublish" does not actually exclude the file from publishing. 
+    The file name is added to the publish list earlier. Publish will fail if it is missing that file. "ng build" deletes outDir anyway.
+    -->
+    <ItemGroup>
+      <NgOldDistFiles Condition="Exists('$(NgOutDir)')" Include="$(NgOutDir)\**" />
+    </ItemGroup>
+    <Warning Condition="'@(NgOldDistFiles)' != ''" Text="There were files existing in folder &quot;$(NgOutDir)&quot; before Publish." />
+  </Target>
+
+  <Target Name="NgBuildAndAddToPublishOutput" AfterTargets="ComputeFilesToPublish">
+    <Exec Command="npm run | findstr &quot;build:$(Configuration)&quot; | sort" ConsoleToMSBuild="true" IgnoreExitCode="true" EchoOff="true" WorkingDirectory="$(MSBuildProjectDirectory)">
       <Output TaskParameter="ConsoleOutput" PropertyName="NpmScriptName" />
     </Exec>
-    <Exec Condition=" '$(NpmScriptName)'=='build:$(Configuration)' " Command="npm run $(NpmScriptName)" />
-    <Exec Condition=" '$(NpmScriptName)'!='build:$(Configuration)' " Command="npm run build" />
+    <PropertyGroup>
+      <!-- There may be many script names that contain the substring. The items are sorted, so take the shortest one. -->
+      <NpmScriptName>$(NpmScriptName.Split(`;`)[0])</NpmScriptName>
+    </PropertyGroup>
+
+    <Message Condition="'$(NpmScriptName)' != 'build:$(Configuration)'" Text="Script &quot;build:$(Configuration)&quot; was not found in package.json" Importance="high" />
+
+    <Exec Condition="'$(NpmScriptName)' == 'build:$(Configuration)'" Command="npm run $(NpmScriptName)" />
+    <Exec Condition="'$(NpmScriptName)' != 'build:$(Configuration)'" Command="npm run build" />
+
+    <PropertyGroup>
+      <NgBaseHref>$(NgBaseHref.Trim('/').Replace('/', '\'))</NgBaseHref>
+      <NgWwwrootDir>wwwroot</NgWwwrootDir>
+      <NgWwwrootDir Condition="'$(NgBaseHref)' != ''">$(NgWwwrootDir)\$(NgBaseHref)</NgWwwrootDir>
+    </PropertyGroup>
 
     <ItemGroup>
-      <DistFiles Include="dist\**" />
-      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
-        <RelativePath>%(DistFiles.Identity)</RelativePath>
-        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <NgDistFiles Condition="Exists('$(NgOutDir)')" Include="$(NgOutDir)\**" />
+    </ItemGroup>
+    <!-- NgWwwrootDir will be created -->
+    <Copy SourceFiles="@(NgDistFiles)" DestinationFolder="$(NgWwwrootDir)" />
+
+    <Delete Condition="'@(NgDistFiles)' != ''" Files="@(NgDistFiles)" />
+
+    <ItemGroup>
+      <NgWwwrootDistFiles Condition="Exists('$(NgWwwrootDir)')" Include="$(NgWwwrootDir)\**" />
+      <ResolvedFileToPublish Condition="'@(NgWwwrootDistFiles)' != ''" Include="@(NgWwwrootDistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>%(NgWwwrootDistFiles.Identity)</RelativePath>
+        <CopyToPublishDirectory>Always</CopyToPublishDirectory>
       </ResolvedFileToPublish>
     </ItemGroup>
+  </Target>
+
+  <Target Name="NgCleanupWwwrootAfterPublish" AfterTargets="AfterPublish">
+    <RemoveDir Condition="'$(NgBaseHref)' != ''" Directories="$(NgWwwrootDir)" />
+    <RemoveDir Condition="'$(NgOutDirExisted)' == 'false'" Directories="$(NgOutDir)" />
   </Target>
 
 </Project>

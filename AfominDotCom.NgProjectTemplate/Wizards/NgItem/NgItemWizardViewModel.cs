@@ -36,7 +36,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
         {
             get
             {
-                return this.isNgFound && !this.isAngularCliJsonFound
+                return /* this.isNgFound && */ !this.isAngularCliJsonFound
                   && !this.isGitignoreOpened && !this.isPackageJsonOpened && !this.isStartupCsOpened;
             }
         }
@@ -91,7 +91,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             this.isStartupCsOpened = isStartupCsOpened;
             this.isOldPackageJsonFound = isOldPackageJsonFound;
             // This must be assigned last because IsInstallAutomaticallyEnabled is calculated based on the above values.
-            this.installAutomatically = IsInstallAutomaticallyEnabled;
+            this.installAutomatically = IsInstallAutomaticallyEnabled && this.isNgFound;
         }
 
         private void OnPropertyChanged(string name)

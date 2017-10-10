@@ -41,9 +41,9 @@
                        Visibility="{Binding Path=IsNgNotFound, Converter={StaticResource BooleanToVisibilityConverter}}" >
                 <Run FontWeight="SemiBold">WARNING</Run>
                 <LineBreak></LineBreak>It looks like Angular CLI is not installed globally.
-                <LineBreak></LineBreak>If you proceed with the project creation, you can manually create an Angular CLI application within the project folder later on.
+                <LineBreak></LineBreak>If you proceed with the project creation, you will be able to create an Angular CLI application manually within the project folder later on.
                 <LineBreak></LineBreak>
-                <Hyperlink x:Name="LearnMoreNgNotFound" NavigateUri="https://github.com/andfomin/NgProjectTemplate#installation" RequestNavigate="LearnMoreNgNotFound_RequestNavigate" >
+                <Hyperlink x:Name="LearnMoreNgNotFound" NavigateUri="https://github.com/andfomin/NgProjectTemplate#projwiz-nong" RequestNavigate="LearnMoreNgNotFound_RequestNavigate" >
                     Learn more ...
                 </Hyperlink>
             </TextBlock>
@@ -71,7 +71,7 @@
                     <LineBreak></LineBreak>If the checkbox is <Italic>unselected</Italic>, an installation process will start in the background immediately after the project has been created.
                     <LineBreak></LineBreak><Italic>Note</Italic>: If you close and reopen the project, Visual Studio will automatically start installing npm packages.
                     <LineBreak></LineBreak>
-                    <Hyperlink x:Name="LearnMoreSkipNpmInstall" NavigateUri="https://github.com/andfomin/NgProjectTemplate#skipnpminstall" RequestNavigate="LearnMoreSkipNpmInstall_RequestNavigate" >
+                    <Hyperlink x:Name="LearnMoreSkipNpmInstall" NavigateUri="https://github.com/andfomin/NgProjectTemplate#projwiz-skipnpm" RequestNavigate="LearnMoreSkipNpmInstall_RequestNavigate" >
                         Learn more ...
                     </Hyperlink>
                 </TextBlock>

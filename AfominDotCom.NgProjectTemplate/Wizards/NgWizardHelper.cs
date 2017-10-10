@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 namespace AfominDotCom.NgProjectTemplate.Wizards
 {
@@ -14,38 +15,46 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
         internal const string PackageJsonOldFileName = "package.json.old";
         internal const string AngularCliJsonFileName = ".angular-cli.json";
         internal const string StartupCsFileName = "Startup.cs";
+        internal const string NgFoundLogFileName = "ErrorNgNotFound.txt";
 
-        private static string RunCmdSync(string arguments, string workingDirectory)
+        private static string RunCmd(string arguments, string workingDirectory, bool createNoWindow, bool redirectStandardOutput)
         {
-            string processOutput = null;
+            string output = null;
             var startInfo = new ProcessStartInfo
             {
                 FileName = "cmd.exe",
                 Arguments = arguments,
                 WorkingDirectory = workingDirectory,
                 UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
+                CreateNoWindow = createNoWindow,
+                RedirectStandardOutput = redirectStandardOutput,
             };
             using (var process = System.Diagnostics.Process.Start(startInfo))
             {
-                processOutput = process.StandardOutput.ReadToEnd();
+                if (redirectStandardOutput)
+                {
+                    output = process.StandardOutput.ReadToEnd();
+                }
                 process.WaitForExit();
             }
-            return processOutput;
+            return output;
         }
 
         private static string RunNgVersion(string workingDirectory)
         {
             var cmdArguments = "/c ng --version";
-            return RunCmdSync(cmdArguments, workingDirectory);
+            return RunCmd(cmdArguments, workingDirectory, true, true);
         }
 
-        internal static string RunNgNew(string workingDirectory, string projectName, bool addRouting = true)
+        internal static string RunNgNew(string workingDirectory, string projectName, bool addRouting, bool isNgFound)
         {
-            var routingOption = addRouting ? " --routing" : String.Empty;
-            var cmdArguments = $"/c ng new {projectName} --directory .{routingOption} --skip-git --skip-install";
-            return RunCmdSync(cmdArguments, workingDirectory);
+            // CMD writes errors to the StandardError stream. NG writes errors to StandardOutput. 
+            // To read both the streams is possible but needs extra effots to avoid a thread deadlock.
+            // If NG was not found, we display the Command Window to the user to watch the errors.
+            var routingOption = addRouting ? " --routing" : "";
+            var cmdArguments = $"/c ng new {projectName} --directory .{routingOption} --skip-git --skip-install"
+                + (isNgFound ? "" : " & timeout /t 10");
+            return RunCmd(cmdArguments, workingDirectory, isNgFound, isNgFound);
         }
 
         /// <summary>
@@ -55,17 +64,20 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
         /// <returns></returns>
         internal static bool IsNgFound(string preferredDirectory)
         {
+            // Be optimistic. Missing target is better than false alarm. We will check the result of "ng new" anyway.
             var isNgFound = true;
             var desktopDirectory = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
             var workingDirectory = Directory.Exists(preferredDirectory)
                 ? preferredDirectory
                 : (Directory.Exists(desktopDirectory) ? desktopDirectory : null);
+            string ngVersionOutput = String.Empty;
+            var start = DateTime.Now;
             if (!String.IsNullOrEmpty(workingDirectory))
             {
-                var ngVersionOutput = RunNgVersion(workingDirectory);
-                isNgFound = ngVersionOutput.Contains(NgVersionSuccessFragment);
+                ngVersionOutput = RunNgVersion(workingDirectory);
+                // Old versions of CLI ~1.1 (actually chalk / supports-color) on Windows 7 fail when the output stream is redirected. ngVersionOutput is null/empty in that case.
+                isNgFound = !String.IsNullOrEmpty(ngVersionOutput) && ngVersionOutput.Contains(NgVersionSuccessFragment);
             }
-
             return isNgFound;
         }
 
@@ -121,16 +133,16 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
 
         internal static bool FindWindow(Project project, string filePath)
         {
-            return FindWindow(project, filePath, out Window window);
+            return FindWindow(project, filePath, out EnvDTE.Window window);
         }
 
-        internal static bool FindWindow(Project project, string filePath, out Window window)
+        internal static bool FindWindow(Project project, string filePath, out EnvDTE.Window window)
         {
             window = null;
             var windows = project.DTE.Windows;
             foreach (var w in windows)
             {
-                if (w is Window wnd)
+                if (w is EnvDTE.Window wnd)
                 {
                     var projectItem = wnd.ProjectItem;
                     if ((projectItem != null) && (projectItem.FileCount != 0) /* && window.Type == vsWindowType.vsWindowTypeDocument */)
@@ -156,6 +168,19 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
         //    }
         //    return false;
         //}
+
+        internal static void RewriteFile(string filePath, string fileContents)
+        {
+            // Don't do: File.WriteAllText(filePath, result.ToString(), System.Text.Encoding.UTF8); // That writes a BOM. BOM causes Webpack to fail.
+            var bytes = Encoding.UTF8.GetBytes(fileContents);
+            using (var memoryStream = new MemoryStream(bytes))
+            {
+                using (var fileStream = new FileStream(filePath, FileMode.Truncate, FileAccess.Write))
+                {
+                    memoryStream.CopyTo(fileStream);
+                }
+            }
+        }
 
     }
 }

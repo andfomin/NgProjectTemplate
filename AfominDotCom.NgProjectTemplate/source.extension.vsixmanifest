@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="AfominDotCom.NgProjectTemplate.4e23e6f4-6f2c-4b66-8670-513bbc233486" Version="1.0.7" Language="en-US" Publisher="Andrey Fomin" />
-        <DisplayName>Angular CLI Project Template</DisplayName>
-        <Description xml:space="preserve">This project template creates an Angular CLI application. The project will launch the original NG Development Server.</Description>
+        <Identity Id="AfominDotCom.NgProjectTemplate.4e23e6f4-6f2c-4b66-8670-513bbc233486" Version="1.0.8" Language="en-US" Publisher="Andrey Fomin" />
+        <DisplayName>Angular CLI Templates</DisplayName>
+        <Description xml:space="preserve">Add Angular CLI to an existing ASP.NET Core project or create an Angular CLI static website project. Projects will launch the original NG Development Server.</Description>
         <MoreInfo>https://github.com/andfomin/NgProjectTemplate</MoreInfo>
         <License>License.txt</License>
         <Icon>NgProjectTemplateIcon.ico</Icon>
         <PreviewImage>NgProjectTemplatePreview.png</PreviewImage>
-        <Tags>angular cli angular-cli static static-website</Tags>
+        <Tags>angular cli angular-cli static static-website asp-net-core</Tags>
     </Metadata>
     <Installation>
         <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[15.0,16.0)" />
@@ -16,13 +16,12 @@
         <InstallationTarget Id="Microsoft.VisualStudio.Enterprise" Version="[15.0,16.0)" />
     </Installation>
     <Dependencies>
-        <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,)" />
+        <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.6,)" />
     </Dependencies>
     <Assets>
         <Asset Type="Microsoft.VisualStudio.ProjectTemplate" d:Source="Project" d:ProjectName="NgProjectTemplate" d:TargetPath="|NgProjectTemplate;TemplateProjectOutputGroup|" Path="ProjectTemplates" d:VsixSubPath="ProjectTemplates" />
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%|" AssemblyName="|%CurrentProject%;AssemblyName|" />
         <Asset Type="Microsoft.VisualStudio.ItemTemplate" d:Source="Project" d:ProjectName="NgItemTemplate" d:TargetPath="|NgItemTemplate;TemplateProjectOutputGroup|" Path="ItemTemplates" d:VsixSubPath="ItemTemplates" />
-        <!--<Asset Type="AfominDotCom.AspNetCore.AngularCLI.0.0.3.nupkg" d:Source="File" Path="Packages\AfominDotCom.AspNetCore.AngularCLI.0.0.3.nupkg" d:VsixSubPath="Packages" />-->
     </Assets>
     <Prerequisites>
         <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0,16.0)" DisplayName="Visual Studio core editor" />

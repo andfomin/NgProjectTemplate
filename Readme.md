@@ -10,7 +10,7 @@ You can find the template in Visual Studio by opening the **New Project** dialog
 
 Alternatively, you can download the VSIX file and install it in Visual Studio manually. The template will be installed under the TypeScript category.
 
-# <a id="installation"></a>Creating a project
+# <a id="projwiz-nong"></a>Creating a project
 
 Open the standard **New Project** dialog, navigate to Angular CLI Application template, specify the project name and its location, as well as whether to initialize a Git repository for the project.
 
@@ -22,7 +22,7 @@ Angular CLI is a Node application which uses npm modules installed locally in th
 
 A custom *.gitignore* file with combined settings for Visual Studio and Angular CLI is always added to the project root.
 
-# <a id="skipnpminstall"></a>Installing npm modules.
+# <a id="projwiz-skipnpm"></a>Installing npm modules.
 
 If you have decided to skip installing npm packages during a project creation, an initial npm install will be postponed until the first **Build** or **Run** of the project. An npm install will be executed during the first **Build** only if there is no *node_modules* folder found under the project root. That process uses the globally installed Node and npm executables.
 
