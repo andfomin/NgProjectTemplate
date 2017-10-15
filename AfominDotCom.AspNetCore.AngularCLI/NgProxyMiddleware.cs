@@ -14,6 +14,9 @@ using System.Threading.Tasks;
 
 namespace AfominDotCom.AspNetCore.AngularCLI
 {
+    /// <summary>
+    /// Middleware for serving Angular CLI application files by an ASP.NET Core server during development.
+    /// </summary>
     public class NgProxyMiddleware
     {
         private const string DefaultNgServerHost = "localhost";
@@ -45,6 +48,12 @@ namespace AfominDotCom.AspNetCore.AngularCLI
         private readonly Dictionary<string, NgProxy> pathPrefixToProxyMap;
         private readonly bool proxyToPathRoot;
 
+        /// <summary>
+        /// Starts many instances of NG Development Server with different options and proxies requests from the ASP.NET Core pipeline to an appropriate server for request paths that start with baseHref paths specified for "app" objects in the .angular-cli.json file. 
+        /// </summary>
+        /// <param name="next">RequestDelegate</param>
+        /// <param name="hostingEnv">IHostingEnvironment</param>
+        /// <param name="options">This is a list of option strings for separate "ng serve" commands. Each string is a set of options for a particular app. This is NOT a list of separate options for an individual app.</param>
         public NgProxyMiddleware(RequestDelegate next, IHostingEnvironment hostingEnv, IOptions<List<string>> options)
         {
             // Store the next middleware in the request processing chain.
@@ -92,7 +101,11 @@ namespace AfominDotCom.AspNetCore.AngularCLI
             this.pathPrefixToProxyMap = CreateProxiesAfterNgStarted(pathPrefixToProxyOptionsMap);
         }
 
-
+        /// <summary>
+        /// Process an individual request.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public async Task Invoke(HttpContext context)
         {
             if (HttpMethods.IsGet(context.Request.Method))

@@ -64,16 +64,19 @@ Then the template copies the files produced by the build script to a subfolder u
 
 ### Explanations of the messages that are displayed in the dialog during an application creation
 
-* <a id="itemwiz-gotng"></a>This project has already got an Angular&#160;CLI application.
+* <a id="itemwiz-coreversion"></a>The project references an unsupported version of ASP.NET Core.
+[Learn more ...](https://github.com/andfomin/NgProjectTemplate/wiki/itemwiz-coreversion)
+
+* <a id="itemwiz-gotng"></a>This project has already got an Angular CLI application.
 [Learn more ...](https://github.com/andfomin/NgProjectTemplate/wiki/itemwiz-gotng)
 
-* <a id="itemwiz-nong"></a>It looks like Angular&#160;CLI is not installed globally.
+* <a id="itemwiz-nong"></a>It looks like Angular CLI is not installed globally.
 [Learn more ...](https://github.com/andfomin/NgProjectTemplate/wiki/itemwiz-nong)
 
 * <a id="itemwiz-fileopened"></a>The existing file needs to be modified.
 [Learn more ...](https://github.com/andfomin/NgProjectTemplate/wiki/itemwiz-fileopened)
 
-* Add an Angular&#160;CLI application to the project automatically.
+* Add an Angular CLI application to the project automatically.
 [Learn more ...](https://github.com/andfomin/NgProjectTemplate/wiki/itemwiz-options)
 
 * <a id="itemwiz-mergepackagejson"></a>An existing package.json file was found.

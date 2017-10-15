@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Target Name="FirstNpmInstall" BeforeTargets="BeforeBuild" Condition="!Exists('$(MSBuildProjectDirectory)\node_modules\@angular\cli')">
+  <Target Name="FirstNpmInstall" BeforeTargets="BeforeBuild" 
+          Condition="Exists('$(MSBuildProjectDirectory)\package.json') And !Exists('$(MSBuildProjectDirectory)\node_modules\@angular\cli')">
     <Message Text="------ Initial installation of npm packages for Angular CLI ------" Importance="high" />
     <Message Text="node --version" Importance="high" />
     <Exec Command="node --version" />

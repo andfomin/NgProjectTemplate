@@ -182,5 +182,16 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             }
         }
 
+        internal static bool IsCoreVersion1(Project project)
+        {
+            var filePath = project?.FullName;
+            if (File.Exists(filePath))
+            {
+                var text = File.ReadAllText(filePath);
+                return text.Contains("<TargetFramework>netcoreapp1.");
+            }
+            return false;
+        }
+
     }
 }

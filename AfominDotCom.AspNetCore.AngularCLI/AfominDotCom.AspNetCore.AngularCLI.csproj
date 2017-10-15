@@ -20,6 +20,10 @@
     <Description>This package is used to host an Angular CLI application in an ASP.NET Core project. It is part of the Angular CLI Templates that you can find in the Online section of the New Project or the New Item dialogs in Visual Studio 2017.</Description>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netstandard2.0\AfominDotCom.AspNetCore.AngularCLI.xml</DocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Remove="build\AfominDotCom.AspNetCore.AngularCLI.props" />
     <None Remove="build\AfominDotCom.AspNetCore.AngularCLI.targets" />

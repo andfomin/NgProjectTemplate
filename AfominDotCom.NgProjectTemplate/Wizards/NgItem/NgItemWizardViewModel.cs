@@ -7,6 +7,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
 
     public class NgItemWizardViewModel : INotifyPropertyChanged
     {
+        private bool isCoreVersion1;
         private bool isAngularCliJsonFound;
         private bool isNgFound;
         private bool installAutomatically;
@@ -36,9 +37,14 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
         {
             get
             {
-                return /* this.isNgFound && */ !this.isAngularCliJsonFound
+                return /* this.isNgFound && */ !this.isCoreVersion1 && !this.isAngularCliJsonFound
                   && !this.isGitignoreOpened && !this.isPackageJsonOpened && !this.isStartupCsOpened;
             }
+        }        
+
+        public bool DisplayCoreVersion1Warning
+        {
+            get { return this.isCoreVersion1; }
         }
 
         public bool DisplayAngularCliJsonFoundWarning
@@ -80,12 +86,13 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             get { return this.isOldPackageJsonFound && this.installAutomatically; }
         }
 
-        public NgItemWizardViewModel(bool isNgFound, bool isAngularCliJsonFound, bool isOldPackageJsonFound,
+        public NgItemWizardViewModel(bool isCoreVersion1, bool isAngularCliJsonFound, bool isNgFound, bool isOldPackageJsonFound,
             bool isGitignoreOpened, bool isPackageJsonOpened, bool isStartupCsOpened)
         {
             WindowTitle = WizardResources.NgItemWindowTitle;
-            this.isNgFound = isNgFound;
+            this.isCoreVersion1 = isCoreVersion1;
             this.isAngularCliJsonFound = isAngularCliJsonFound;
+            this.isNgFound = isNgFound;
             this.isGitignoreOpened = isGitignoreOpened;
             this.isPackageJsonOpened = isPackageJsonOpened;
             this.isStartupCsOpened = isStartupCsOpened;

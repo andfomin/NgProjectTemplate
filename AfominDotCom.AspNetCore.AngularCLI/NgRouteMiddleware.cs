@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace AfominDotCom.AspNetCore.AngularCLI
 {
     /// <summary>
-    /// Serves the index file for a request path that starts with base-href specified in .angular-cli.json.
+    /// Middleware for serving Angular CLI application files by an ASP.NET Core server in production.
     /// </summary>
     public class NgRouteMiddleware
     {
@@ -18,6 +18,11 @@ namespace AfominDotCom.AspNetCore.AngularCLI
         private readonly RequestDelegate next;
         private List<KeyValuePair<string, string>> pathPrefixToFilePathMap;
 
+        /// <summary>
+        /// Serves the index file from a corresponding subfolder in the wwwroot directory for request paths that start with a baseHref path specified in the .angular-cli.json file. Ignores requests for file names with extensions.
+        /// </summary>
+        /// <param name="next">RequestDelegate</param>
+        /// <param name="hostingEnv">IHostingEnvironment</param>
         public NgRouteMiddleware(RequestDelegate next, IHostingEnvironment hostingEnv)
         {
             // Store the next middleware in the request processing chain.

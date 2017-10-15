@@ -21,7 +21,7 @@
         </Style>
         <Style x:Key="WarningStyle" TargetType="TextBlock">
             <Setter Property="TextWrapping" Value="Wrap" />
-            <Setter Property="Margin" Value="0,10"/>
+            <Setter Property="Margin" Value="0,5"/>
         </Style>
         <Style x:Key="FileOpenedTextStyle" TargetType="TextBlock">
             <Setter Property="TextWrapping" Value="Wrap" />
@@ -36,7 +36,16 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <StackPanel Orientation="Vertical" Margin="30, 5" >
+        <StackPanel Orientation="Vertical" Margin="40, 5" >
+            <TextBlock Style="{StaticResource WarningStyle}" 
+                       Visibility="{Binding Path=DisplayCoreVersion1Warning, Converter={StaticResource BooleanToVisibilityConverter}}" >
+                <Run FontWeight="SemiBold">WARNING</Run>
+                <LineBreak></LineBreak>This template supports ASP.NET&#160;Core version 2. The project references an unsupported version.
+                <LineBreak></LineBreak>
+                <Hyperlink NavigateUri="https://github.com/andfomin/NgProjectTemplate#itemwiz-coreversion" RequestNavigate="LearnMore_RequestNavigate" >
+                    Learn more ...
+                </Hyperlink>
+            </TextBlock>
             <TextBlock x:Name="AngularCliFoundText" Style="{StaticResource WarningStyle}" 
                        Visibility="{Binding Path=DisplayAngularCliJsonFoundWarning, Converter={StaticResource BooleanToVisibilityConverter}}" >
                 <Run FontWeight="SemiBold">WARNING</Run>
@@ -109,7 +118,7 @@
         </StackPanel>
 
         <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Bottom" 
-                    Orientation="Horizontal" Height="30" Margin="0,0,20,20" >
+                    Orientation="Horizontal" Height="30" Margin="0,0,40,20" >
             <Button Content="OK" Width="80" x:Name="OkButton" IsDefault="True" Click="OnClickOk" />
             <Button Content="Cancel" Width="80" Margin="10,0,0,0" IsCancel="True" Click="OnClickCancel" />
         </StackPanel>

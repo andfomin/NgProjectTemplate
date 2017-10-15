@@ -114,6 +114,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             // Test if @angular/cli is installed globally.
             this.isNgFound = NgWizardHelper.IsNgFound(solutionDirectory);
 
+            bool isCoreVersion1 = false;
             bool isAngularCliJsonFound = false;
             bool isOldPackageJsonFound = false;
             bool isGitignoreOpened = false;
@@ -125,6 +126,9 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             if (activeProjects.Length > 0)
             {
                 var project = (Project)activeProjects.GetValue(0);
+
+                // The NuGet package needs netstandard2.0. We don't support ASP.NET Core 1.x projects.
+                isCoreVersion1 = NgWizardHelper.IsCoreVersion1(project);
                 // Look for an existing .angular-cli.json indicating there has been already an Angular CLI app created.
                 isAngularCliJsonFound = NgWizardHelper.FindFileInRootDir(project, NgWizardHelper.AngularCliJsonFileName);
                 // Test if a package.json exists.
@@ -146,8 +150,8 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             }
 
             // Display the wizard to the user.
-            var viewModel = new NgItemWizardViewModel(this.isNgFound, isAngularCliJsonFound, isOldPackageJsonFound,
-                isGitignoreOpened, isPackageJsonOpened, isStartupCsOpened);
+            var viewModel = new NgItemWizardViewModel(isCoreVersion1, isAngularCliJsonFound, this.isNgFound,
+                isOldPackageJsonFound, isGitignoreOpened, isPackageJsonOpened, isStartupCsOpened);
             var mainWindow = new NgItemWizardWindow(viewModel);
             var accepted = mainWindow.ShowDialog().GetValueOrDefault();
 
