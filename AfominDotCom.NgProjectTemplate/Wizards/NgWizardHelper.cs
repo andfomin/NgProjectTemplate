@@ -8,7 +8,9 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
 {
     public static class NgWizardHelper
     {
-        private const string NgVersionSuccessFragment = "@angular/cli";
+        // private const string NgVersionSuccessFragment = "@angular/cli";
+        private const string NgVersionSuccessFragment1 = "angular";
+        private const string NgVersionSuccessFragment2 = "cli";
         internal const string GitignoreFileName = ".gitignore";
         internal const string GitignoreTempFileName = ".gitignore.temp";
         internal const string PackageJsonFileName = "package.json";
@@ -76,31 +78,37 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             {
                 ngVersionOutput = RunNgVersion(workingDirectory);
                 // Old versions of CLI ~1.1 (actually chalk / supports-color) on Windows 7 fail when the output stream is redirected. ngVersionOutput is null/empty in that case.
-                isNgFound = !String.IsNullOrEmpty(ngVersionOutput) && ngVersionOutput.Contains(NgVersionSuccessFragment);
+                isNgFound = !String.IsNullOrEmpty(ngVersionOutput);
+                if (isNgFound)
+                {
+                    var lowerCaseOutput = ngVersionOutput.ToLower();
+                    isNgFound = lowerCaseOutput.Contains(NgVersionSuccessFragment1) 
+                        && lowerCaseOutput.Contains(NgVersionSuccessFragment2);
+                }
             }
             return isNgFound;
         }
 
-        public static ProjectItem FindProjectItem(Project project, string fileName)
-        {
-            ProjectItem projectItem = null;
-            if (project != null)
-            {
-                foreach (var i in project.ProjectItems)
-                {
-                    if (i is ProjectItem item)
-                    {
-                        var itemName = item.Name;
-                        if (itemName.Equals(fileName, StringComparison.OrdinalIgnoreCase))
-                        {
-                            projectItem = item;
-                            break;
-                        }
-                    }
-                }
-            }
-            return projectItem;
-        }
+        //public static ProjectItem FindProjectItem(Project project, string fileName)
+        //{
+        //    ProjectItem projectItem = null;
+        //    if (project != null)
+        //    {
+        //        foreach (var i in project.ProjectItems)
+        //        {
+        //            if (i is ProjectItem item)
+        //            {
+        //                var itemName = item.Name;
+        //                if (itemName.Equals(fileName, StringComparison.OrdinalIgnoreCase))
+        //                {
+        //                    projectItem = item;
+        //                    break;
+        //                }
+        //            }
+        //        }
+        //    }
+        //    return projectItem;
+        //}
 
         internal static bool FindFileInRootDir(Project project, string fileName)
         {

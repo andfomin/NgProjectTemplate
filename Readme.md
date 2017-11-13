@@ -62,7 +62,7 @@ During a Publish, the template looks up a script name in package.json correspond
 If no corresponding script name is found, the default "build" script will be executed.
 Then the template copies the files produced by the build script to a subfolder under the standard "wwwroot" directory, according to the relative path specified in the "baseHref" setting that was described above.
 
-### Explanations of the messages that are displayed in the dialog during an application creation
+### Explanations of the messages that may be displayed in the dialog during an application creation
 
 * <a id="itemwiz-coreversion"></a>The project references an unsupported version of ASP.NET Core.
 [Learn more ...](https://github.com/andfomin/NgProjectTemplate/wiki/itemwiz-coreversion)

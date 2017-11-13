@@ -75,7 +75,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             var ngNewSucceeded = File.Exists(readmeMdFilePath);
 
             var messageText = ngNewSucceeded
-                ? String.Format(WizardResources.ReadmeSuccessMessage, project.Name, GetVersion())
+                ? String.Format(WizardResources.ReadmeSuccessMessage, project.Name, NgWizardHelper.GetVersion())
                 : WizardResources.ReadmeFailureMessage + ngNewOutput;
             ;
 
@@ -172,16 +172,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                 replacementsDictionary.TryGetValue("$solutiondirectory$", out solutionDirectory);
 
                 // Test if @angular/cli is installed globally.
-                var isNgFound = true;
-                var desktopDirectory = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-                var workingDirectory = Directory.Exists(destinationDirectory)
-                    ? destinationDirectory
-                    : (Directory.Exists(desktopDirectory) ? desktopDirectory : null);
-                if (!String.IsNullOrEmpty(workingDirectory))
-                {
-                    var ngVersionOutput = RunNgVersion(workingDirectory);
-                    isNgFound = ngVersionOutput.Contains(NgVersionSuccessFragment);
-                }
+                var isNgFound = NgWizardHelper.IsNgFound(solutionDirectory);
 
                 // Display the wizard to the user.
                 var viewModel = new NgProjectWizardViewModel(projectName, isNgFound);
@@ -247,12 +238,6 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             return processOutput;
         }
 
-        public static string RunNgVersion(string workingDirectory)
-        {
-            var cmdArguments = $"/c ng --version";
-            return RunCmdSync(cmdArguments, workingDirectory);
-        }
-
         public static string RunNgNew(string workingDirectory, string projectName, bool addRouting)
         {
             var routingOption = addRouting ? " --routing" : String.Empty;
@@ -263,15 +248,19 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
         private static ProjectItem FindProjectItem(Project project, string fileName)
         {
             ProjectItem projectItem = null;
-            foreach (var i in project.ProjectItems)
+            if (project != null)
             {
-                if (i is ProjectItem item)
+
+                foreach (var i in project.ProjectItems)
                 {
-                    var itemName = item.Name;
-                    if (itemName.Equals(fileName, StringComparison.OrdinalIgnoreCase))
+                    if (i is ProjectItem item)
                     {
-                        projectItem = item;
-                        break;
+                        var itemName = item.Name;
+                        if (itemName.Equals(fileName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            projectItem = item;
+                            break;
+                        }
                     }
                 }
             }
@@ -290,11 +279,6 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                 }
             }
             return filePath;
-        }
-
-        private static Version GetVersion()
-        {
-            return typeof(AfominDotCom.NgProjectTemplate.Wizards.NgProjectWizard).Assembly.GetName().Version;
         }
 
     }

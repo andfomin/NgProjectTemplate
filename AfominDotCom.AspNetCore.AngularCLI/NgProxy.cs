@@ -18,11 +18,11 @@ namespace AfominDotCom.AspNetCore.AngularCLI
     internal class NgProxy
     {
         private readonly HttpClient httpClient;
-        private readonly NgProxyOptions options;
+        public NgProxyOptions Options { get; private set; }
 
         public NgProxy(NgProxyOptions options)
         {
-            this.options = options ?? throw new ArgumentNullException(nameof(options));
+            this.Options = options ?? throw new ArgumentNullException(nameof(options));
             this.httpClient = new HttpClient(new HttpClientHandler());
         }
 
@@ -38,8 +38,8 @@ namespace AfominDotCom.AspNetCore.AngularCLI
                     requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
                 }
 
-                requestMessage.Headers.Host = this.options.Host + ":" + this.options.Port;
-                var uriString = $"{this.options.Scheme}://{this.options.Host}:{this.options.Port}{context.Request.PathBase}{context.Request.Path}{context.Request.QueryString}";
+                requestMessage.Headers.Host = this.Options.Host + ":" + this.Options.Port;
+                var uriString = $"{this.Options.Scheme}://{this.Options.Host}:{this.Options.Port}{context.Request.PathBase}{context.Request.Path}{context.Request.QueryString}";
                 requestMessage.RequestUri = new Uri(uriString);
                 requestMessage.Method = new HttpMethod(context.Request.Method);
 
@@ -55,6 +55,7 @@ namespace AfominDotCom.AspNetCore.AngularCLI
 
                     if (context.Response.StatusCode != StatusCodes.Status304NotModified)
                     {
+                        // If by any chance we do proxy a GET to sockjs-node, watch Content-Length is wrong by 1 byte. Kestrel will silently fall.
                         await responseMessage.Content.CopyToAsync(context.Response.Body);
                     }
                 }

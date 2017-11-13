@@ -13,7 +13,7 @@ namespace AfominDotCom.AspNetCore.AngularCLI
     {
 
         /// <summary>
-        /// Starts an NG Development Server with default options and proxies requests from the ASP.NET Core pipeline to it for request paths that start with a baseHref path specified in the .angular-cli.json file.
+        /// Starts an NG Development Server with default options and proxies requests from the ASP.NET Core pipeline to it for request paths that start with the baseHref path specified in the .angular-cli.json file.
         /// </summary>
         /// <param name="app">IApplicationBuilder</param>
         /// <returns>IApplicationBuilder</returns>
@@ -23,7 +23,7 @@ namespace AfominDotCom.AspNetCore.AngularCLI
         }
 
         /// <summary>
-        /// Starts an NG Development Server with specified options and proxies requests from the ASP.NET Core pipeline to it for request paths that start with a baseHref path specified in the .angular-cli.json file. 
+        /// Starts an NG Development Server with specified options and proxies requests from the ASP.NET Core pipeline to it for request paths that start with the baseHref path specified in the .angular-cli.json file. 
         /// </summary>
         /// <param name="app">IApplicationBuilder</param>
         /// <param name="ngServeOptions">Options passed to the "ng serve" command. For example, "--port 4242".</param>
@@ -34,7 +34,7 @@ namespace AfominDotCom.AspNetCore.AngularCLI
         }
 
         /// <summary>
-        /// Starts many instances of NG Development Server with different options and proxies requests from the ASP.NET Core pipeline to an appropriate server for request paths that start with baseHref paths specified for "app" objects in the .angular-cli.json file. 
+        /// Starts many instances of NG Development Server with different options and proxies requests from the ASP.NET Core pipeline to an appropriate server for request paths that start with the baseHref paths specified for "app" objects in the .angular-cli.json file. 
         /// </summary>
         /// <param name="app">IApplicationBuilder</param>
         /// <param name="ngServeOptionsList">This is a list of option strings for separate "ng serve" commands. Each string is a set of options for a particular app. This is NOT a list of separate options for an individual app.</param>

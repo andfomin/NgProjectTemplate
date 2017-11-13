@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -21,7 +21,8 @@ namespace AfominDotCom.AspNetCore.AngularCLI
     {
         private const string DefaultNgServerHost = "localhost";
         private const int DefaultNgServerPort = 4200;
-        private static string DefaultNgServerBaseHref = "/";
+        private const string DefaultNgServerBaseHref = "/";
+        private const string SockJsNodePathSegment = "/sockjs-node";
 
         // TODO AF20170930. Adapt RegEx patterns for the other options syntax, --app app1 vs --app=app1.
         private const string HostOptionPattern = @"(?:--host|-H)\s+(\S+)\s*";
@@ -108,22 +109,31 @@ namespace AfominDotCom.AspNetCore.AngularCLI
         /// <returns></returns>
         public async Task Invoke(HttpContext context)
         {
-            if (HttpMethods.IsGet(context.Request.Method))
+            var request = context.Request;
+            var response = context.Response;
+            // To start an HMR connection, CLI 1.4 and lower called the absolute URL to the NG server port directly, bypassing the ASP.NET server.
+            // Starting from CLI 1.5, it calls a relative URL, so requests come to the ASP.NET Core server port.
+            // We redirect those requests.
+            var isHmrHandshakeRequest = request.Path.StartsWithSegments(SockJsNodePathSegment);
+            if (isHmrHandshakeRequest)
             {
-                var pathPrefix = pathPrefixToProxyMap
-                .Select(i => i.Key)
-                // If baseHref is "/", that means catch all.
-                .FirstOrDefault(i => (i == "/") || context.Request.Path.StartsWithSegments(i));
+                RedirectHmrHandshake(context);
+                return;
+            }
 
+            if (HttpMethods.IsGet(request.Method) || HttpMethods.IsHead(request.Method))
+            {
+                var pathPrefix = FindPathPrefixInMap(request.Path);
                 if (pathPrefix != null)
                 {
-                    var proxy = pathPrefixToProxyMap[pathPrefix];
+                    // Proxy will be created as soon as the port is opened.
+                    var proxy = this.pathPrefixToProxyMap[pathPrefix];
                     // Wait for at least two minutes until the Ng server has started.
                     var counter = 240;
                     while ((proxy == null) && (counter > 0))
                     {
                         await Task.Delay(TimeSpan.FromMilliseconds(500));
-                        proxy = pathPrefixToProxyMap[pathPrefix];
+                        proxy = this.pathPrefixToProxyMap[pathPrefix];
                         counter--;
                     }
 
@@ -132,16 +142,16 @@ namespace AfominDotCom.AspNetCore.AngularCLI
                         // Call the Ng server
                         // Webpack in Angular CLI 1.1 didn't recognize path. It served from the root.
                         // Starting from Angular CLI 1.4 the path in "base-href" is respected.
-                        if (this.proxyToPathRoot)
-                        {
-                            await CallProxyToPathRoot(context, proxy);
-                        }
-                        else
+                        if (!this.proxyToPathRoot)
                         {
                             await proxy.HandleHttpRequest(context);
                         }
+                        else
+                        {
+                            await CallProxyToPathRoot(context, proxy);
+                        }
 
-                        if (context.Response.StatusCode != (int)HttpStatusCode.NotFound)
+                        if (response.StatusCode != StatusCodes.Status404NotFound)
                         {
                             return;
                         }
@@ -150,6 +160,41 @@ namespace AfominDotCom.AspNetCore.AngularCLI
 
                 // Not an Ng request.
                 await this.next.Invoke(context);
+            }
+        }
+
+        private string FindPathPrefixInMap(PathString requestPath)
+        {
+            var pathPrefix = this.pathPrefixToProxyMap
+              .Select(i => i.Key)
+              // If baseHref is "/", that means catch all.
+              .FirstOrDefault(i => (i == "/") || requestPath.StartsWithSegments(i));
+            return pathPrefix;
+        }
+
+        private void RedirectHmrHandshake(HttpContext context)
+        {
+            var request = context.Request;
+            var response = context.Response;
+
+            response.StatusCode = StatusCodes.Status421MisdirectedRequest;
+
+            // Get the app baseHref from the "Referer" header. Most sockjs requests supply it. The WebSocket upgrade request does not. It would fail anyway if redirected.
+            var refererText = request.Headers[HeaderNames.Referer].FirstOrDefault() ?? String.Empty;
+            if (!String.IsNullOrEmpty(refererText))
+            {
+                var requestPath = new PathString(new Uri(refererText).AbsolutePath);
+                var pathPrefix = FindPathPrefixInMap(requestPath);
+                if (pathPrefix != null)
+                {
+                    var proxy = this.pathPrefixToProxyMap[pathPrefix];
+                    if (proxy != null)
+                    {
+                        var newLocation = $"{proxy.Options.Scheme}://{proxy.Options.Host}:{proxy.Options.Port}{request.PathBase}{request.Path}{request.QueryString}";
+                        response.Headers[HeaderNames.Location] = newLocation;
+                        response.StatusCode = StatusCodes.Status302Found;
+                    }
+                }
             }
         }
 
@@ -259,8 +304,8 @@ namespace AfominDotCom.AspNetCore.AngularCLI
               .ToList()
               .ForEach(i =>
               {
-            // An NG Develpment Server might be started manually from the Command Prompt. Check if that is the case.
-            if (!IsPortAvailable(i))
+                  // An NG Develpment Server might be started manually from the Command Prompt. Check if that is the case.
+                  if (!IsPortAvailable(i))
                   {
                       throw new Exception(String.Format(ErrorPortUnavailable, i));
                   }
@@ -506,7 +551,6 @@ namespace AfominDotCom.AspNetCore.AngularCLI
                 }
             }
         }
-
 
     }
 }
