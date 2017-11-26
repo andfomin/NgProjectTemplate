@@ -34,9 +34,7 @@ The actual installation of the npm packages does not happen at the time of the a
 * Add NuGet package [AfominDotCom.AspNetCore.AngularCLI](https://www.nuget.org/packages/AfominDotCom.AspNetCore.AngularCLI/) to the project. 
 That NuGet package is actually always added, even if you did not choose the Automatic Installation option.
 
-* Modify the existing _Startup.cs_ file. 
-
-Modify the `Configure` method. Insert the following code snippet at the end of the method in an WebAPI, MVC or Razor Pages project or before `app.Run(...)` in an Empty project. If no existing `app.UseStaticFiles()` call was found in the `Configure` method, uncomment the `app.UseStaticFiles();` line in the code snippet.
+* Modify the existing _Startup.cs_ file. Modify the `Configure` method. Insert the following code snippet at the end of the method in an WebAPI, MVC or Razor Pages project or before `app.Run(...)` in an Empty project. If no existing `app.UseStaticFiles()` call was found in the `Configure` method, uncomment the `app.UseStaticFiles();` line in the code snippet.
 ```csharp
 if (env.IsDevelopment())
 {
