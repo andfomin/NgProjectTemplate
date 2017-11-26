@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using AfominDotCom.AspNetCore.AngularCLI;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AfominDotCom.AspNetCore.AngularCLI
+namespace Microsoft.AspNetCore.Builder
 {
     /// <summary>
     /// Extension methods for serving Angular CLI application files by an ASP.NET Core server.

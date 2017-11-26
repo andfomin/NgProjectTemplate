@@ -15,7 +15,7 @@
     <ProjectItem ReplaceParameters="false">Readme_AngularCLI.txt</ProjectItem>
   </TemplateContent>
   <WizardExtension>
-    <Assembly>AfominDotCom.NgProjectTemplate, Version=1.0.9.0, Culture=Neutral, PublicKeyToken=53bcf0057ad908c4</Assembly>
+    <Assembly>AfominDotCom.NgProjectTemplate, Version=1.0.10.0, Culture=Neutral, PublicKeyToken=53bcf0057ad908c4</Assembly>
     <FullClassName>AfominDotCom.NgProjectTemplate.Wizards.NgItemWizard</FullClassName>
   </WizardExtension>
   <WizardExtension>
@@ -24,7 +24,7 @@
   </WizardExtension>
   <WizardData>
     <packages repository="extension" repositoryId="AfominDotCom.NgProjectTemplate.4e23e6f4-6f2c-4b66-8670-513bbc233486">
-      <package id="AfominDotCom.AspNetCore.AngularCLI" version="1.0.4" />
+      <package id="AfominDotCom.AspNetCore.AngularCLI" version="1.0.5" />
     </packages>
     <!--<Assets>
       <Asset Type="AfominDotCom.AspNetCore.AngularCLI.0.0.3.nupkg" d:Source="File" Path="Packages\AfominDotCom.AspNetCore.AngularCLI.0.0.3.nupkg" d:VsixSubPath="Packages" />

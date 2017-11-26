@@ -22,7 +22,8 @@ namespace AfominDotCom.AspNetCore.AngularCLI
         private const string DefaultNgServerHost = "localhost";
         private const int DefaultNgServerPort = 4200;
         private const string DefaultNgServerBaseHref = "/";
-        private const string SockJsNodePathSegment = "/sockjs-node";
+        private const string HmrHandshakePathSegment = "/sockjs-node";
+        private const string HmrHandshakeInfoPath = "/sockjs-node/info";
 
         // TODO AF20170930. Adapt RegEx patterns for the other options syntax, --app app1 vs --app=app1.
         private const string HostOptionPattern = @"(?:--host|-H)\s+(\S+)\s*";
@@ -35,7 +36,7 @@ namespace AfominDotCom.AspNetCore.AngularCLI
 
         private const string ErrorBaseHrefPassed = "Do not specify a \"--base-href\" path in \"ng serve\" options. Specify a \"baseHref\" in .angular-cli.json instead.";
         private const string ErrorAppCount = "The number of option strings in the list passed as a parameter exceeds the number of items in array \"apps\" in .angular-cli.json .";
-        private const string ErrorPortUnavailable = "Port {0} is already in use.";
+        private const string WarningPortUnavailable = "WARNING! NgProxyMiddleware: Port {0} is already in use. If you have launched an NG Development Server manually, it will be used by the proxy.";
         // Options validation
         private const string ErrorDuplicatePort = "Duplicate 'port' values are not allowed.";
         private const string ErrorDuplicateBaseHref = "Duplicate \"baseHref\" values are not allowed.";
@@ -48,6 +49,7 @@ namespace AfominDotCom.AspNetCore.AngularCLI
         private readonly RequestDelegate next;
         private readonly Dictionary<string, NgProxy> pathPrefixToProxyMap;
         private readonly bool proxyToPathRoot;
+        private PathString lastHmrHandshakeInfoRefererPath;
 
         /// <summary>
         /// Starts many instances of NG Development Server with different options and proxies requests from the ASP.NET Core pipeline to an appropriate server for request paths that start with baseHref paths specified for "app" objects in the .angular-cli.json file. 
@@ -92,11 +94,10 @@ namespace AfominDotCom.AspNetCore.AngularCLI
             var optionsList = AppendBaseHrefToOptions(contentRootPath, passedOptionsList);
             ValidateOptions(optionsList);
             var pathPrefixToProxyOptionsMap = ParseOptions(optionsList);
-
-            // An NG Develpment Server might be started manually from the Command Prompt. Make sure that is not the case.
-            CheckPortAvailability(pathPrefixToProxyOptionsMap);
+            // An NG Develpment Server might be started manually from the Command Prompt.
+            var optionsListToStart = FilterOptionsListByPortAvailability(optionsList);
             // Start an Ng server for each app in the list. 
-            StartNgServeProcesses(contentRootPath, optionsList);
+            StartNgServeProcesses(contentRootPath, optionsListToStart);
 
             // Create an NgProxy for each Ng app. Do not create the proxy until the Ng server is available.
             this.pathPrefixToProxyMap = CreateProxiesAfterNgStarted(pathPrefixToProxyOptionsMap);
@@ -110,57 +111,73 @@ namespace AfominDotCom.AspNetCore.AngularCLI
         public async Task Invoke(HttpContext context)
         {
             var request = context.Request;
-            var response = context.Response;
-            // To start an HMR connection, CLI 1.4 and lower called the absolute URL to the NG server port directly, bypassing the ASP.NET server.
-            // Starting from CLI 1.5, it calls a relative URL, so requests come to the ASP.NET Core server port.
-            // We redirect those requests.
-            var isHmrHandshakeRequest = request.Path.StartsWithSegments(SockJsNodePathSegment);
+            var requestPath = request.Path;
+
+            /* To start an HMR connection, CLI 1.4 and lower called the absolute URL pointing to the NG server port directly, bypassing the ASP.NET server. Starting from CLI 1.5, it calls a relative URL, so requests come to the ASP.NET Core server port. HMR ignores baseHref, it sends requests to the magic route.
+             */
+            var isHmrHandshakeRequest = requestPath.StartsWithSegments(HmrHandshakePathSegment);
+            // Be carefull, requestPath.Value may be null. Consider HasValue.
+            var isHmrHandshakeInfoRequest = isHmrHandshakeRequest && requestPath.Value.StartsWith(HmrHandshakeInfoPath);
+
             if (isHmrHandshakeRequest)
             {
-                RedirectHmrHandshake(context);
-                return;
+                // Get the app's baseHref from the "Referer" header. Most SockJS requests supply it. The WebSocket request does not.
+                var refererPath = GetRefererPathOfHmrRequest(context);
+                if (!refererPath.HasValue && context.WebSockets.IsWebSocketRequest)
+                {
+                    /* A WebSocket request always immediately follows an Info response. We don't have a more relaiable way to correlate them.  */
+                    refererPath = this.lastHmrHandshakeInfoRefererPath;
+                }
+                requestPath = refererPath;
             }
 
-            if (HttpMethods.IsGet(request.Method) || HttpMethods.IsHead(request.Method))
+            var pathPrefix = FindPathPrefixInMap(requestPath);
+            if (pathPrefix != null)
             {
-                var pathPrefix = FindPathPrefixInMap(request.Path);
-                if (pathPrefix != null)
+                // Proxy will be created as soon as the port is opened.
+                var proxy = this.pathPrefixToProxyMap[pathPrefix];
+                // Wait for at least two minutes until the Ng server has started.
+                var counter = 240;
+                while ((proxy == null) && (counter > 0))
                 {
-                    // Proxy will be created as soon as the port is opened.
-                    var proxy = this.pathPrefixToProxyMap[pathPrefix];
-                    // Wait for at least two minutes until the Ng server has started.
-                    var counter = 240;
-                    while ((proxy == null) && (counter > 0))
-                    {
-                        await Task.Delay(TimeSpan.FromMilliseconds(500));
-                        proxy = this.pathPrefixToProxyMap[pathPrefix];
-                        counter--;
-                    }
-
-                    if (proxy != null)
-                    {
-                        // Call the Ng server
-                        // Webpack in Angular CLI 1.1 didn't recognize path. It served from the root.
-                        // Starting from Angular CLI 1.4 the path in "base-href" is respected.
-                        if (!this.proxyToPathRoot)
-                        {
-                            await proxy.HandleHttpRequest(context);
-                        }
-                        else
-                        {
-                            await CallProxyToPathRoot(context, proxy);
-                        }
-
-                        if (response.StatusCode != StatusCodes.Status404NotFound)
-                        {
-                            return;
-                        }
-                    }
+                    await Task.Delay(TimeSpan.FromMilliseconds(500));
+                    proxy = this.pathPrefixToProxyMap[pathPrefix];
+                    counter--;
                 }
 
-                // Not an Ng request.
-                await this.next.Invoke(context);
+                if (proxy != null)
+                {
+                    // Call the Ng server
+                    // Webpack in Angular CLI 1.1 didn't recognize path. It served from the root.
+                    // Starting from Angular CLI 1.4 the path in "base-href" is respected.
+                    if (!this.proxyToPathRoot)
+                    {
+                        await proxy.HandleRequest(context);
+                    }
+                    else
+                    {
+                        await CallProxyToPathRoot(context, proxy);
+                    }
+
+                    /* The HMR uses the SockJS library. While iterating through available transports, it uses short timeouts based on the round-trip time of the preceeding 'info' request. See functions SockJS.prototype._receiveInfo and SockJS.prototype._connect .
+                     Sometimes the latency of initialization of our WebSocket proxy exceeds the timeout. In this case SockJS dosn't use WebSocket, although the connection is eventually established. It requests a next transport, which is xhr_streaming and which works unreliably (it skips every second HMR notification.)
+                     We intentionally add a delay to the 'info' response to increase the timeout for establishing a WebSocket connection.
+                     */
+                    if (isHmrHandshakeInfoRequest)
+                    {
+                        await Task.Delay(200);
+                        this.lastHmrHandshakeInfoRefererPath = requestPath;
+                    }
+
+                    if (context.Response.StatusCode != StatusCodes.Status404NotFound)
+                    {
+                        return;
+                    }
+                }
             }
+
+            //Not an Ng request.
+            await this.next.Invoke(context);
         }
 
         private string FindPathPrefixInMap(PathString requestPath)
@@ -168,34 +185,21 @@ namespace AfominDotCom.AspNetCore.AngularCLI
             var pathPrefix = this.pathPrefixToProxyMap
               .Select(i => i.Key)
               // If baseHref is "/", that means catch all.
-              .FirstOrDefault(i => (i == "/") || requestPath.StartsWithSegments(i));
+              .FirstOrDefault(i => (i == "/") || requestPath.HasValue && requestPath.StartsWithSegments(i))
+              ;
             return pathPrefix;
         }
 
-        private void RedirectHmrHandshake(HttpContext context)
+        private PathString GetRefererPathOfHmrRequest(HttpContext context)
         {
-            var request = context.Request;
-            var response = context.Response;
-
-            response.StatusCode = StatusCodes.Status421MisdirectedRequest;
-
-            // Get the app baseHref from the "Referer" header. Most sockjs requests supply it. The WebSocket upgrade request does not. It would fail anyway if redirected.
-            var refererText = request.Headers[HeaderNames.Referer].FirstOrDefault() ?? String.Empty;
+            PathString refererPath = PathString.Empty;
+            // Get the app baseHref from the "Referer" header. Most SockJS requests supply it. The WebSocket request does not.
+            var refererText = context.Request.Headers[HeaderNames.Referer].FirstOrDefault();
             if (!String.IsNullOrEmpty(refererText))
             {
-                var requestPath = new PathString(new Uri(refererText).AbsolutePath);
-                var pathPrefix = FindPathPrefixInMap(requestPath);
-                if (pathPrefix != null)
-                {
-                    var proxy = this.pathPrefixToProxyMap[pathPrefix];
-                    if (proxy != null)
-                    {
-                        var newLocation = $"{proxy.Options.Scheme}://{proxy.Options.Host}:{proxy.Options.Port}{request.PathBase}{request.Path}{request.QueryString}";
-                        response.Headers[HeaderNames.Location] = newLocation;
-                        response.StatusCode = StatusCodes.Status302Found;
-                    }
-                }
+                refererPath = new PathString(new Uri(refererText).AbsolutePath);
             }
+            return refererPath;
         }
 
         /// <summary>
@@ -220,7 +224,7 @@ namespace AfominDotCom.AspNetCore.AngularCLI
                     }
                 }
                 // Call the Ng server
-                await proxy.HandleHttpRequest(context);
+                await proxy.HandleRequest(context);
             }
             finally
             {
@@ -297,20 +301,35 @@ namespace AfominDotCom.AspNetCore.AngularCLI
             return pathPrefixToProxyOptionsMap;
         }
 
-        private static void CheckPortAvailability(Dictionary<string, NgProxyOptions> pathPrefixToProxyOptionsMap)
+        private static IEnumerable<string> FilterOptionsListByPortAvailability(IEnumerable<string> optionsList)
         {
-            pathPrefixToProxyOptionsMap
-              .Select(i => i.Value.Port)
-              .ToList()
-              .ForEach(i =>
-              {
-                  // An NG Develpment Server might be started manually from the Command Prompt. Check if that is the case.
-                  if (!IsPortAvailable(i))
-                  {
-                      throw new Exception(String.Format(ErrorPortUnavailable, i));
-                  }
-              })
-              ;
+            // An NG Develpment Server might be started manually from the Command Prompt. Check if that is the case.
+            var optionsListWithPortAvailability = optionsList
+                .Select(i =>
+                {
+                    var port = GetNgServerPort(i);
+                    return new
+                    {
+                        OptionsLine = i,
+                        Port = port,
+                        IsPortAvailable = IsPortAvailable(port),
+                    };
+                })
+                .ToList()
+                ;
+            optionsListWithPortAvailability.ForEach(i =>
+            {
+                if (!i.IsPortAvailable)
+                {
+                    Debug.WriteLine(String.Format(WarningPortUnavailable, i.Port));
+                }
+            })
+            ;
+            var filteredOptionsList = optionsListWithPortAvailability
+               .Where(i => i.IsPortAvailable)
+               .Select(i => i.OptionsLine)
+               ;
+            return filteredOptionsList;
         }
 
         internal static bool IsPortAvailable(int port)
@@ -355,10 +374,10 @@ namespace AfominDotCom.AspNetCore.AngularCLI
             var newOptionsList = optionsList.Select((optionsLine, index) =>
             {
                 var baseHref = ngAppSettings
-                .Where(i => i.AppIndex == index)
-                .Select(i => i.BaseHref)
-                .FirstOrDefault()
-                ;
+                      .Where(i => i.AppIndex == index)
+                      .Select(i => i.BaseHref)
+                      .FirstOrDefault()
+                      ;
                 if (String.IsNullOrWhiteSpace(baseHref))
                 {
                     throw new Exception(String.Format(NgMiddlewareHelper.ErrorNoBaseHrefInAngularCliJson, index));

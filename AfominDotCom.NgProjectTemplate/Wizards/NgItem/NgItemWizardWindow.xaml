@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AfominDotCom.NgProjectTemplate.Wizards"
         mc:Ignorable="d"
-        Width="480" Height="360" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" 
+        Width="600" Height="450" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" 
         ShowInTaskbar="False" Title="{Binding Path=WindowTitle}" Icon="pack://application:,,,/AfominDotCom.NgProjectTemplate;component/Resources/NgProjectTemplateIcon.ico"  
         FocusManager.FocusedElement="{Binding ElementName=OkButton}"
         >
@@ -38,11 +38,11 @@
         </Grid.ColumnDefinitions>
         <StackPanel Orientation="Vertical" Margin="40, 5" >
             <TextBlock Style="{StaticResource WarningStyle}" 
-                       Visibility="{Binding Path=DisplayCoreVersion1Warning, Converter={StaticResource BooleanToVisibilityConverter}}" >
+                       Visibility="{Binding Path=DisplayAspNetCore2Warning, Converter={StaticResource BooleanToVisibilityConverter}}" >
                 <Run FontWeight="SemiBold">WARNING</Run>
-                <LineBreak></LineBreak>This template supports ASP.NET&#160;Core version 2. The project references an unsupported version.
+                <LineBreak></LineBreak>This template supports ASP.NET&#160;Core 2. The project does not reference the supported version.
                 <LineBreak></LineBreak>
-                <Hyperlink NavigateUri="https://github.com/andfomin/NgProjectTemplate#itemwiz-coreversion" RequestNavigate="LearnMore_RequestNavigate" >
+                <Hyperlink NavigateUri="https://github.com/andfomin/NgProjectTemplate#itemwiz-aspnetversion" RequestNavigate="LearnMore_RequestNavigate" >
                     Learn more ...
                 </Hyperlink>
             </TextBlock>
@@ -54,6 +54,15 @@
                 <Hyperlink NavigateUri="https://github.com/andfomin/NgProjectTemplate#itemwiz-gotng" RequestNavigate="LearnMore_RequestNavigate" >
                     Learn more ...
                 </Hyperlink>
+            </TextBlock>            
+            <TextBlock x:Name="NpmAngularFoundText" Style="{StaticResource WarningStyle}" 
+                       Visibility="{Binding Path=DisplayNpmAngularFoundWarning, Converter={StaticResource BooleanToVisibilityConverter}}" >
+                <Run FontWeight="SemiBold">WARNING</Run>
+                <LineBreak></LineBreak>This project has already got Angular npm packages installed.
+                <LineBreak></LineBreak>
+                <Hyperlink NavigateUri="https://github.com/andfomin/NgProjectTemplate#itemwiz-gotnpmangular" RequestNavigate="LearnMore_RequestNavigate" >
+                    Learn more ...
+                </Hyperlink>
             </TextBlock>
             <TextBlock x:Name="NgNotFoundText" Style="{StaticResource WarningStyle}" 
                        Visibility="{Binding Path=DisplayNgNotFoundWarning, Converter={StaticResource BooleanToVisibilityConverter}}" >
@@ -63,11 +72,11 @@
                 <Hyperlink NavigateUri="https://github.com/andfomin/NgProjectTemplate#itemwiz-nong" RequestNavigate="LearnMore_RequestNavigate" >
                     Learn more ...
                 </Hyperlink>
-            </TextBlock>
+            </TextBlock>            
             <TextBlock Style="{StaticResource WarningStyle}" 
                        Visibility="{Binding Path=DisplayFileOpenedWarning, Converter={StaticResource BooleanToVisibilityConverter}}" >
                 <Run FontWeight="SemiBold">WARNING</Run>
-                <TextBlock Style="{StaticResource FileOpenedTextStyle}" 
+                <!--<TextBlock Style="{StaticResource FileOpenedTextStyle}" 
                        Visibility="{Binding Path=DisplayGitignoreOpened, Converter={StaticResource BooleanToVisibilityConverter}}">
                     The existing <Run FontWeight="SemiBold">.gitignore</Run> file needs to be modified. Automatic installation is disabled because the file is currently opened in an editor window.
                 </TextBlock>
@@ -78,7 +87,12 @@
                 <TextBlock Style="{StaticResource FileOpenedTextStyle}" 
                        Visibility="{Binding Path=DisplayStartupCsOpened, Converter={StaticResource BooleanToVisibilityConverter}}">
                     The existing <Run FontWeight="SemiBold">Startup.cs</Run> file needs to be modified. Automatic installation is disabled because the file is currently opened in an editor window.
-                </TextBlock>               
+                </TextBlock>-->               
+                <TextBlock Style="{StaticResource FileOpenedTextStyle}">
+                    Automatic installation is disabled because a file that needs to be modified is currently opened in an editor window.
+                    Please close the following file(s): 
+                    <Run Text="{Binding OpenedFileNames, Mode=OneTime}" FontWeight="SemiBold"></Run>.
+                </TextBlock>                               
                 <Hyperlink NavigateUri="https://github.com/andfomin/NgProjectTemplate#itemwiz-fileopened" RequestNavigate="LearnMore_RequestNavigate" >
                     Learn more ...
                 </Hyperlink>

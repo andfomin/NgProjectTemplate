@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace AfominDotCom.NgProjectTemplate.Wizards
@@ -41,15 +40,17 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                 bool? modifiedAngularCliJson = null;
                 bool? modifiedStartupSc = null;
                 bool? mergedGitignoreFiles = null;
+                bool renamedTsconfigJson = false;
 
                 var projectDirectory = Path.GetDirectoryName(project.FullName);
                 if (Directory.Exists(projectDirectory))
                 {
                     // Starting from ver.1.4, the CLI creates a ".gitignore" file even if the "--ignore-git" option is specified. So "ng new --ignore-git" fails if there is an existing .gitignore in the directory.
                     // +https://github.com/angular/angular-cli/issues/7686
-                    PreserveExistingFile(projectDirectory, NgWizardHelper.GitignoreFileName, NgWizardHelper.GitignoreTempFileName);
+                    RenameFileIfExists(projectDirectory, NgWizardHelper.GitignoreFileName, NgWizardHelper.GitignoreTempFileName);
 
-                    PreserveExistingFile(projectDirectory, NgWizardHelper.PackageJsonFileName, NgWizardHelper.PackageJsonOldFileName);
+                    RenameFileIfExists(projectDirectory, NgWizardHelper.PackageJsonFileName, NgWizardHelper.PackageJsonOldFileName);
+                    renamedTsconfigJson = RenameFileIfExists(projectDirectory, NgWizardHelper.TsconfigJsonFileName, NgWizardHelper.TsconfigJsonOldFileName);
 
                     // Run "ng new"
                     ngNewOutput = NgWizardHelper.RunNgNew(projectDirectory, project.Name, true, this.isNgFound);
@@ -64,6 +65,13 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                         modifiedStartupSc = ModifyStartupCsFile(projectDirectory);
                         mergedGitignoreFiles = MergeGitignoreFile(projectDirectory);
                     }
+                    else
+                    {
+                        // Rallback renamed files.
+                        RenameFileIfExists(projectDirectory, NgWizardHelper.GitignoreTempFileName, NgWizardHelper.GitignoreFileName);
+                        RenameFileIfExists(projectDirectory, NgWizardHelper.PackageJsonOldFileName, NgWizardHelper.PackageJsonFileName);
+                        renamedTsconfigJson = renamedTsconfigJson && !RenameFileIfExists(projectDirectory, NgWizardHelper.TsconfigJsonOldFileName, NgWizardHelper.TsconfigJsonFileName);
+                    }
                 }
 
                 // Report success/failure of the steps.
@@ -76,16 +84,20 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                    ? "Merging the package.json files: " + GetResultText(mergedPackageJsonFiles) + LineBreak
                    : String.Empty;
                 var angularCliJsonReport = modifiedAngularCliJson.HasValue
-                   ? "Modifying the .angular-cli.json file: " + GetResultText(modifiedAngularCliJson) + LineBreak
+                   ? "Modifying file .angular-cli.json: " + GetResultText(modifiedAngularCliJson) + LineBreak
                    : String.Empty;
                 var startupCsReport = modifiedStartupSc.HasValue
-                   ? "Modifying the Startup.cs file: " + GetResultText(modifiedStartupSc) + LineBreak
+                   ? "Modifying file Startup.cs: " + GetResultText(modifiedStartupSc) + LineBreak
                    : String.Empty;
                 var gitignoreReport = mergedGitignoreFiles.HasValue
                    ? "Merging the .gitignore files: " + GetResultText(mergedGitignoreFiles) + LineBreak
                    : String.Empty;
+                var tsconfigJsonReport = renamedTsconfigJson
+                    ? "Renaming file tsconfig.json to tsconfig.json.old: " + GetResultText(renamedTsconfigJson) + LineBreak 
+                    : String.Empty;
 
-                var messageText = ngNewReport + packageJsonReport + angularCliJsonReport + startupCsReport + gitignoreReport + LineBreak;
+                var messageText = ngNewReport + packageJsonReport + angularCliJsonReport + startupCsReport + gitignoreReport 
+                    + tsconfigJsonReport + LineBreak;
 
                 // Augment the item file with our message.
                 if (projectItem.FileCount != 0)
@@ -111,15 +123,11 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
         {
             replacementsDictionary.TryGetValue("$solutiondirectory$", out string solutionDirectory);
 
+            var settings = new NgItemWizardViewModel.NgItemWizardSettings();
+
             // Test if @angular/cli is installed globally.
             this.isNgFound = NgWizardHelper.IsNgFound(solutionDirectory);
-
-            bool isCoreVersion1 = false;
-            bool isAngularCliJsonFound = false;
-            bool isOldPackageJsonFound = false;
-            bool isGitignoreOpened = false;
-            bool isPackageJsonOpened = false;
-            bool isStartupCsOpened = false;
+            settings.IsNgFound = this.isNgFound;
 
             var dte = (DTE)automationObject;
             var activeProjects = (Array)dte.ActiveSolutionProjects;
@@ -128,30 +136,23 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                 var project = (Project)activeProjects.GetValue(0);
 
                 // The NuGet package needs netstandard2.0. We don't support ASP.NET Core 1.x projects.
-                isCoreVersion1 = NgWizardHelper.IsCoreVersion1(project);
+                settings.IsAspNetCore2 = NgWizardHelper.IsAspNetCore2(project);
                 // Look for an existing .angular-cli.json indicating there has been already an Angular CLI app created.
-                isAngularCliJsonFound = NgWizardHelper.FindFileInRootDir(project, NgWizardHelper.AngularCliJsonFileName);
+                settings.IsAngularCliJsonFound = NgWizardHelper.FindFileInRootDir(project, NgWizardHelper.AngularCliJsonFileName);
                 // Test if a package.json exists.
-                isOldPackageJsonFound = NgWizardHelper.FindFileInRootDir(project, NgWizardHelper.PackageJsonFileName, out string packageJsonFilePath);
+                settings.IsOldPackageJsonFound = NgWizardHelper.FindFileInRootDir(project, NgWizardHelper.PackageJsonFileName, out string packageJsonFilePath);
+                // Test if an entry for "@angular/core" exists in package.json.
+                settings.IsNpmAngularFound = NgWizardHelper.IsNpmAngularFound(packageJsonFilePath);
 
-                // If .gitignore or package.json or Startup.cs is opened in a editor window, automatic installation is disabled.
-                if (NgWizardHelper.FindFileInRootDir(project, NgWizardHelper.GitignoreFileName, out string gitignoreFilePath))
-                {
-                    isGitignoreOpened = NgWizardHelper.FindWindow(project, gitignoreFilePath);
-                }
-                if (isOldPackageJsonFound)
-                {
-                    isPackageJsonOpened = NgWizardHelper.FindWindow(project, packageJsonFilePath);
-                }
-                if (NgWizardHelper.FindFileInRootDir(project, NgWizardHelper.StartupCsFileName, out string startupCsFilePath))
-                {
-                    isStartupCsOpened = NgWizardHelper.FindWindow(project, startupCsFilePath);
-                }
+                // Automatic installation is disabled if .gitignore or package.json or tsconfig.json or Startup.cs is opened in an editor window.
+                settings.IsGitignoreOpened = NgWizardHelper.IsFileOpened(project, NgWizardHelper.GitignoreFileName);
+                settings.IsPackageJsonOpened = NgWizardHelper.IsFileOpened(project, NgWizardHelper.PackageJsonFileName);
+                settings.IsStartupCsOpened = NgWizardHelper.IsFileOpened(project, NgWizardHelper.StartupCsFileName);
+                settings.IsTsconfigJsonOpened = NgWizardHelper.IsFileOpened(project, NgWizardHelper.TsconfigJsonFileName);
             }
 
             // Display the wizard to the user.
-            var viewModel = new NgItemWizardViewModel(isCoreVersion1, isAngularCliJsonFound, this.isNgFound,
-                isOldPackageJsonFound, isGitignoreOpened, isPackageJsonOpened, isStartupCsOpened);
+            var viewModel = new NgItemWizardViewModel(settings);
             var mainWindow = new NgItemWizardWindow(viewModel);
             var accepted = mainWindow.ShowDialog().GetValueOrDefault();
 
@@ -391,7 +392,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                     "#region /* Added by the Angular CLI template. --- BEGIN --- */" + LineBreak +
                     $"if ({envVariableName}.IsDevelopment())" + LineBreak +
                     "{" + LineBreak +
-                    $"{appVariableName}.UseNgProxy();" + LineBreak +
+                    $"{appVariableName}.UseWebSockets().UseNgProxy();" + LineBreak +
                     "}" + LineBreak +
                     "else" + LineBreak +
                     "{" + LineBreak;
@@ -406,9 +407,6 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                     "#endregion /* Added by the Angular CLI template. --- END --- */" + LineBreak + LineBreak;
 
                 codeText = codeText.Insert(insertPos, ngSnippet);
-
-                var usingSnippet = "using AfominDotCom.AspNetCore.AngularCLI;" + LineBreak;
-                codeText = codeText.Insert(0, usingSnippet);
 
                 File.WriteAllText(filePath, codeText);
 
@@ -436,18 +434,20 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             return success.HasValue ? (success.Value ? "DONE" : "FAILED") : "NOT DONE";
         }
 
-        private static void PreserveExistingFile(string projectDirectory, string originalFileName, string copyFileName)
+        private static bool RenameFileIfExists(string projectDirectory, string sourceFileName, string destFileName)
         {
-            var packageJsonFilePath = Path.Combine(projectDirectory, originalFileName);
-            var packageJsonOldFilePath = Path.Combine(projectDirectory, copyFileName);
-            if (File.Exists(packageJsonFilePath))
+            var sourceFilePath = Path.Combine(projectDirectory, sourceFileName);
+            var destFilePath = Path.Combine(projectDirectory, destFileName);
+            if (File.Exists(sourceFilePath))
             {
-                if (File.Exists(packageJsonOldFilePath))
+                if (File.Exists(destFilePath))
                 {
-                    File.Delete(packageJsonOldFilePath);
+                    File.Delete(destFilePath);
                 }
-                File.Move(packageJsonFilePath, packageJsonOldFilePath);
+                File.Move(sourceFilePath, destFilePath);
+                return true;
             }
+            return false;
         }
 
         /// <summary>
@@ -483,8 +483,6 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
 
             return current;
         }
-
-
 
 
     }

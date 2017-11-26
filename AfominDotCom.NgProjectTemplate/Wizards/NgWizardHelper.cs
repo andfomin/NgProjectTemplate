@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace AfominDotCom.NgProjectTemplate.Wizards
@@ -16,6 +17,8 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
         internal const string PackageJsonFileName = "package.json";
         internal const string PackageJsonOldFileName = "package.json.old";
         internal const string AngularCliJsonFileName = ".angular-cli.json";
+        internal const string TsconfigJsonFileName = "tsconfig.json";
+        internal const string TsconfigJsonOldFileName = "tsconfig.json.old";
         internal const string StartupCsFileName = "Startup.cs";
         internal const string NgFoundLogFileName = "ErrorNgNotFound.txt";
 
@@ -82,7 +85,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                 if (isNgFound)
                 {
                     var lowerCaseOutput = ngVersionOutput.ToLower();
-                    isNgFound = lowerCaseOutput.Contains(NgVersionSuccessFragment1) 
+                    isNgFound = lowerCaseOutput.Contains(NgVersionSuccessFragment1)
                         && lowerCaseOutput.Contains(NgVersionSuccessFragment2);
                 }
             }
@@ -190,13 +193,47 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             }
         }
 
-        internal static bool IsCoreVersion1(Project project)
+        internal static bool IsAspNetCore2(Project project)
         {
             var filePath = project?.FullName;
             if (File.Exists(filePath))
             {
-                var text = File.ReadAllText(filePath);
-                return text.Contains("<TargetFramework>netcoreapp1.");
+                var lines = File.ReadAllLines(filePath);
+                //var isCoreVersion2 = lines
+                //    .Where(i => i.Contains("<TargetFramework>") && i.Contains("netcoreapp2."))
+                //    .Any()
+                //    ;
+                var isAspNetCore2 = lines
+                    .Where(i => i.Contains("<PackageReference") && i.Contains("\"Microsoft.AspNetCore.") && i.Contains("\"2."))
+                    .Any()
+                    ;
+                return /* isCoreVersion2 && */ isAspNetCore2;
+            }
+            return false;
+        }
+
+        internal static bool IsNpmAngularFound(string packageJsonFilePath)
+        {
+            if (File.Exists(packageJsonFilePath))
+            {
+                var lines = File.ReadAllLines(packageJsonFilePath);
+                var isNpmAngularFound = lines
+                  .Where(i => i.Contains("@angular/core"))
+                  // Although the JSON standard demands double quotes, let's be paranoid.
+                  .Select(i => i.Replace("'", "\""))
+                  .Where(i => i.Contains("\"@angular/core\""))
+                  .Any()
+                  ;
+                return isNpmAngularFound;
+            }
+            return false;
+        }
+
+        internal static bool IsFileOpened(Project project, string fileName)
+        {
+            if (FindFileInRootDir(project, fileName, out string filePath))
+            {
+                return FindWindow(project, filePath);
             }
             return false;
         }
