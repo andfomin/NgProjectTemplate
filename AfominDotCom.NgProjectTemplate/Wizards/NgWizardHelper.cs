@@ -51,15 +51,22 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             return RunCmd(cmdArguments, workingDirectory, true, true);
         }
 
-        internal static string RunNgNew(string workingDirectory, string projectName, bool addRouting, bool isNgFound)
+        internal static string RunNgNew(string projectDirectory, string projectName, bool addRouting, bool isNgFound)
         {
+            var path = projectDirectory.EndsWith("\\") ? projectDirectory : string.Concat(projectDirectory, "\\");
+            var directoryInfo = Directory.GetParent(path);
+            var parentDirectory = directoryInfo.Parent.FullName;
+            var directory = directoryInfo.Name;
+
+            var routingOption = addRouting ? " --routing" : "";
+
             // CMD writes errors to the StandardError stream. NG writes errors to StandardOutput. 
             // To read both the streams is possible but needs extra effots to avoid a thread deadlock.
             // If NG was not found, we display the Command Window to the user to watch the errors.
-            var routingOption = addRouting ? " --routing" : "";
-            var cmdArguments = $"/c ng new {projectName} --directory .{routingOption} --skip-git --skip-install"
+            var cmdArguments = $"/c ng new {projectName} --directory {directory}{routingOption} --skip-git --skip-install"
                 + (isNgFound ? "" : " & timeout /t 10");
-            return RunCmd(cmdArguments, workingDirectory, isNgFound, isNgFound);
+
+            return RunCmd(cmdArguments, parentDirectory, isNgFound, isNgFound);
         }
 
         /// <summary>

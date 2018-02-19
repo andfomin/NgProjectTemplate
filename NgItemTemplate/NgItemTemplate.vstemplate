@@ -15,7 +15,7 @@
     <ProjectItem ReplaceParameters="false">Readme_AngularCLI.txt</ProjectItem>
   </TemplateContent>
   <WizardExtension>
-    <Assembly>AfominDotCom.NgProjectTemplate, Version=1.0.10.0, Culture=Neutral, PublicKeyToken=53bcf0057ad908c4</Assembly>
+    <Assembly>AfominDotCom.NgProjectTemplate, Version=1.0.11.0, Culture=Neutral, PublicKeyToken=53bcf0057ad908c4</Assembly>
     <FullClassName>AfominDotCom.NgProjectTemplate.Wizards.NgItemWizard</FullClassName>
   </WizardExtension>
   <WizardExtension>

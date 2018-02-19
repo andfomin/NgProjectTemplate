@@ -1,6 +1,6 @@
 # Introduction
 
-This is a set of two separate templates that create Angular CLI applications in Visual Studio 2017. There is a template that adds the Angular CLI to an existing ASP.NET Core project. Another template creates an Angular CLI application as a static website project. These two templates are respectively referred to as Item Template and Project Template.
+This is a set of two separate templates that create Angular CLI applications in Visual Studio 2017. There is a template that adds the Angular CLI to an existing ASP.NET Core project. It is referred to as Item Template. Another template creates an Angular CLI application as a static website project. It is referred to as Project Template.
 
 The Item Template adds an Angular CLI application to an existing ASP.NET Core 2.0 project. The main project launches the standard NG Development Server during development and routes requests to it, so the Angular application is available on the same port as the ASP.NET application. During a Release build and deployment, the template calls Angular CLI to build the application and copies the files over to the standard wwwroot folder to make them available at the same path as the path specified during development. 
 

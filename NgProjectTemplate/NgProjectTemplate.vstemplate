@@ -5,8 +5,8 @@
     <Description>This template creates a static Angular CLI website as a Visual Studio project. The project launches the original NG Development Server.</Description>
     <Icon>NgProjectTemplateIcon.ico</Icon>
     <PreviewImage>NgProjectTemplatePreview.png</PreviewImage>
-    <ProjectType>CSharp</ProjectType>
-    <!--<ProjectType>TypeScript</ProjectType>-->
+    <!--<ProjectType>CSharp</ProjectType>-->
+    <ProjectType>TypeScript</ProjectType>
     <!--<ProjectSubType>CSharp</ProjectSubType>-->
     <!--<SortOrder>1000</SortOrder>-->
     <TemplateID>94c71159-2037-4edb-8945-110ddebd793c</TemplateID>
@@ -23,7 +23,7 @@
     </Project>
   </TemplateContent>
   <WizardExtension>
-    <Assembly>AfominDotCom.NgProjectTemplate, Version=1.0.10.0, Culture=Neutral, PublicKeyToken=53bcf0057ad908c4</Assembly>
+    <Assembly>AfominDotCom.NgProjectTemplate, Version=1.0.11.0, Culture=Neutral, PublicKeyToken=53bcf0057ad908c4</Assembly>
     <FullClassName>AfominDotCom.NgProjectTemplate.Wizards.NgProjectWizard</FullClassName>
   </WizardExtension>
 </VSTemplate>

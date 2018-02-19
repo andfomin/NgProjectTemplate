@@ -17,6 +17,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
         private const string packageJsonFileName = "package.json";
         private const string includePackageJsonElement = "<None Include=\"package.json\" />";
 
+        private bool isNgFound;
         private bool skipNpmInstall;
         private bool addRouting;
         private Project project;
@@ -59,7 +60,8 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                 }
 
                 // Run "ng new"
-                ngNewOutput = RunNgNew(projectDirectory, project.Name, this.addRouting);
+                // ngNewOutput = RunNgNew(projectDirectory, project.Name, this.addRouting);
+                ngNewOutput = NgWizardHelper.RunNgNew(projectDirectory, project.Name, this.addRouting, this.isNgFound);
 
                 if (File.Exists(gitignoreTempFilePath))
                 {
@@ -172,10 +174,10 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                 replacementsDictionary.TryGetValue("$solutiondirectory$", out solutionDirectory);
 
                 // Test if @angular/cli is installed globally.
-                var isNgFound = NgWizardHelper.IsNgFound(solutionDirectory);
+                this.isNgFound = NgWizardHelper.IsNgFound(solutionDirectory);
 
                 // Display the wizard to the user.
-                var viewModel = new NgProjectWizardViewModel(projectName, isNgFound);
+                var viewModel = new NgProjectWizardViewModel(projectName, this.isNgFound);
                 var mainWindow = new NgProjectWizardWindow(viewModel);
                 var accepted = mainWindow.ShowDialog().GetValueOrDefault();
 
@@ -216,33 +218,6 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
         public bool ShouldAddProjectItem(string filePath)
         {
             return true;
-        }
-
-        private static string RunCmdSync(string arguments, string workingDirectory)
-        {
-            string processOutput = null;
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "cmd.exe",
-                Arguments = arguments,
-                WorkingDirectory = workingDirectory,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-            };
-            using (var process = System.Diagnostics.Process.Start(startInfo))
-            {
-                processOutput = process.StandardOutput.ReadToEnd();
-                process.WaitForExit();
-            }
-            return processOutput;
-        }
-
-        public static string RunNgNew(string workingDirectory, string projectName, bool addRouting)
-        {
-            var routingOption = addRouting ? " --routing" : String.Empty;
-            var cmdArguments = $"/c ng new {projectName} --directory .{routingOption} --skip-git --skip-install";
-            return RunCmdSync(cmdArguments, workingDirectory);
         }
 
         private static ProjectItem FindProjectItem(Project project, string fileName)
