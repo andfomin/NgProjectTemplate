@@ -3,10 +3,10 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.5</Version>
-    <AssemblyVersion>1.0.5.0</AssemblyVersion>
-    <FileVersion>1.0.5.0</FileVersion>
-    <Copyright>Copyright 2017</Copyright>
+    <Version>1.0.6</Version>
+    <AssemblyVersion>1.0.6.0</AssemblyVersion>
+    <FileVersion>1.0.6.0</FileVersion>
+    <Copyright>Copyright 2017, 2018</Copyright>
     <PackageLicenseUrl>https://github.com/andfomin/NgProjectTemplate/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/andfomin/NgProjectTemplate</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/andfomin/NgProjectTemplate/master/Icon32.png</PackageIconUrl>

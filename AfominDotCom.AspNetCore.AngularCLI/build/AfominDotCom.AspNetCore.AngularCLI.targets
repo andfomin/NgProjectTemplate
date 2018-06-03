@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Target Name="FirstNpmInstall" BeforeTargets="BeforeBuild" 
+  <Target Name="FirstNpmInstall" BeforeTargets="BeforeBuild"
           Condition="Exists('$(MSBuildProjectDirectory)\package.json') And !Exists('$(MSBuildProjectDirectory)\node_modules\@angular\cli')">
     <Message Text="------ Initial installation of npm packages for Angular CLI ------" Importance="high" />
     <Message Text="node --version" Importance="high" />
@@ -19,25 +19,78 @@
   <ItemGroup>
     <Content Update="src\**;e2e\**;dist\**;package.json;tslint.json;tsconfig.json" CopyToPublishDirectory="Never" />
     <Content Update=".angular-cli.json" CopyToPublishDirectory="PreserveNewest"/>
+    <Content Update="angular.json" CopyToPublishDirectory="PreserveNewest"/>
   </ItemGroup>
 
-  <Target Name="NgValidateBeforePublish" BeforeTargets="BeforePublish">
+  <PropertyGroup>
+    <!-- Old file format, CLI ver. 1.x -->
+    <DotAngularCliJsonFileName>.angular-cli.json</DotAngularCliJsonFileName>
+    <!-- New file format, CLI ver. 6 -->
+    <AngularJsonFileName>angular.json</AngularJsonFileName>
+  </PropertyGroup>
+
+  <Target Name="GetNgSettingsVer1" BeforeTargets="NgValidateBeforePublish"
+          Condition="Exists('$(MSBuildProjectDirectory)\$(DotAngularCliJsonFileName)')">
+    <PropertyGroup>
+      <ActualAngularJsonFileName>$(DotAngularCliJsonFileName)</ActualAngularJsonFileName>
+    </PropertyGroup>
     <Exec Command="ng get apps[0].outDir" ConsoleToMSBuild="true" IgnoreExitCode="true" EchoOff="true" WorkingDirectory="$(MSBuildProjectDirectory)">
       <Output TaskParameter="ConsoleOutput" PropertyName="NgOutDir" />
-    </Exec>    
-    <PropertyGroup>
-      <NgOutDirExisted Condition="!Exists('$(NgOutDir)')">false</NgOutDirExisted>
-    </PropertyGroup>
-
+    </Exec>
     <Exec Command="ng get apps[0].baseHref" ConsoleToMSBuild="true" IgnoreExitCode="true" EchoOff="true" WorkingDirectory="$(MSBuildProjectDirectory)">
       <Output TaskParameter="ConsoleOutput" PropertyName="NgBaseHref" />
     </Exec>
-    <Message Text="Path &quot;$(NgBaseHref)&quot; is specified as &quot;baseHref&quot; in .angular-cli.json." Importance="high" />
+  </Target>
 
-    <Warning Condition="'$(NgBaseHref)' == '' Or !$(NgBaseHref.StartsWith(`/`)) Or !HasTrailingSlash('$(NgBaseHref)')" Text="A &quot;baseHref&quot; path must be specified in .angular-cli.json and it must start and end with a slash." />
+  <!--<UsingTask TaskName="GetNgProjectName" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <FilePath ParameterType="System.String" Required="true" />
+      <Result ParameterType="System.String" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.IO" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[  
+          // Log.LogMessage(FilePath, MessageImportance.High);
+          var text = File.ReadAllText(FilePath);
+          const string projectsStart = "\"projects\":";
+          var pos1 = text.IndexOf(projectsStart);
+          var pos2 = text.IndexOf("\"", pos1 + projectsStart.Length);
+          var pos3 = text.IndexOf("\"", pos2 + 1);
+          Result = text.Substring(pos2 + 1, pos3 - pos2 - 1);
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>-->
+
+  <Target Name="GetNgSettingsVer6" BeforeTargets="NgValidateBeforePublish"
+          Condition="Exists('$(MSBuildProjectDirectory)\$(AngularJsonFileName)')">
+    <PropertyGroup>
+      <ActualAngularJsonFileName>$(AngularJsonFileName)</ActualAngularJsonFileName>
+    </PropertyGroup>
+    <!--<GetNgProjectName FilePath="$(MSBuildProjectDirectory)\$(AngularJsonFileName)">
+      <Output PropertyName="NgProjectName" TaskParameter="Result" />
+    </GetNgProjectName>-->
+    <Exec Command="ng config defaultProject" ConsoleToMSBuild="true" IgnoreExitCode="true" EchoOff="true" WorkingDirectory="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="NgProjectName" />
+    </Exec>     
+    <Exec Command="ng config &quot;projects.$(NgProjectName).architect.build.options.outputPath&quot;" ConsoleToMSBuild="true" IgnoreExitCode="true" EchoOff="true" WorkingDirectory="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="NgOutDir" />
+    </Exec>
+    <Exec Command="ng config &quot;projects.$(NgProjectName).architect.build.options.baseHref&quot;" ConsoleToMSBuild="true" IgnoreExitCode="true" EchoOff="true" WorkingDirectory="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="NgBaseHref" />
+    </Exec>
+  </Target>
+
+  <Target Name="NgValidateBeforePublish" BeforeTargets="BeforePublish">
+    <Message Text="Path &quot;$(NgOutDir)&quot; is specified as the output path in $(ActualAngularJsonFileName)." Importance="high" />
+    <Message Text="Path &quot;$(NgBaseHref)&quot; is specified as &quot;baseHref&quot; in $(ActualAngularJsonFileName)." Importance="high" />
+    <Warning Condition="'$(NgBaseHref)' == '' Or !$(NgBaseHref.StartsWith(`/`)) Or !HasTrailingSlash('$(NgBaseHref)')" Text="A &quot;baseHref&quot; path must be specified in $(ActualAngularJsonFileName) and it must start and end with a slash." />
 
     <PropertyGroup>
       <NgBaseHref Condition="'$(NgBaseHref)' == '' Or !$(NgBaseHref.StartsWith(`/`)) Or !HasTrailingSlash('$(NgBaseHref)')">/</NgBaseHref>
+      <NgOutDirExisted Condition="!Exists('$(NgOutDir)')">false</NgOutDirExisted>
     </PropertyGroup>
 
     <!-- Deleting an existing file in this task with BeforeTargets="BeforePublish" does not actually exclude the file from publishing. 

@@ -50,7 +50,7 @@ namespace AfominDotCom.AspNetCore.AngularCLI
             // Argument of PathString.StartsWithSegments() must not have a trailing slash.
             RequestPathSegment = i.BaseHref == "/" ? i.BaseHref : i.BaseHref.TrimEnd('/'),
             // Slashes are acceptable in the middle and at the end, but not at the start of a path segment.
-            IndexFilePath = Path.Combine(webRootPath, i.BaseHref.TrimStart('/'), i.IndexFileName),
+            IndexFilePath = Path.Combine(webRootPath, i.BaseHref.TrimStart('/'), Path.GetFileName(i.IndexFileName)),
               })
               .Select(i => new KeyValuePair<string, string>(i.RequestPathSegment, i.IndexFilePath))
               .ToList()

@@ -35,6 +35,8 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             if (this.installAutomatically && (project != null))
             {
                 string ngNewOutput = String.Empty;
+                bool ngNewSucceededVer1 = false;
+                bool ngNewSucceededVer6 = false;
                 bool? ngNewSucceeded = null;
                 bool? mergedPackageJsonFiles = null;
                 bool? modifiedAngularCliJson = null;
@@ -56,12 +58,16 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                     ngNewOutput = NgWizardHelper.RunNgNew(projectDirectory, project.Name, true, this.isNgFound);
 
                     // Find the .angular-cli.json created by "ng new".
-                    ngNewSucceeded = NgWizardHelper.FindFileInRootDir(project, NgWizardHelper.AngularCliJsonFileName);
+                    ngNewSucceededVer1 = NgWizardHelper.FindFileInRootDir(project, NgWizardHelper.AngularCliJsonFileName);
+                    ngNewSucceededVer6 = NgWizardHelper.FindFileInRootDir(project, NgWizardHelper.AngularJsonFileName);
+                    ngNewSucceeded = ngNewSucceededVer1 || ngNewSucceededVer6;
 
                     if (ngNewSucceeded.Value)
                     {
                         mergedPackageJsonFiles = MergePackageJsonFiles(projectDirectory);
-                        modifiedAngularCliJson = ModifyAngularCliJsonFile(projectDirectory);
+                        modifiedAngularCliJson = ngNewSucceededVer6
+                            ? ModifyAngularJsonFile(projectDirectory, NgWizardHelper.AngularJsonFileName, project.Name)
+                            : ModifyAngularCliJsonFile(projectDirectory);
                         modifiedStartupSc = ModifyStartupCsFile(projectDirectory);
                         mergedGitignoreFiles = MergeGitignoreFile(projectDirectory);
                     }
@@ -84,7 +90,9 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                    ? "Merging the package.json files: " + GetResultText(mergedPackageJsonFiles) + LineBreak
                    : String.Empty;
                 var angularCliJsonReport = modifiedAngularCliJson.HasValue
-                   ? "Modifying file .angular-cli.json: " + GetResultText(modifiedAngularCliJson) + LineBreak
+                   ? ("Modifying file "
+                   + (ngNewSucceededVer6 ? NgWizardHelper.AngularJsonFileName : NgWizardHelper.AngularCliJsonFileName)
+                   + ": " + GetResultText(modifiedAngularCliJson) + LineBreak)
                    : String.Empty;
                 var startupCsReport = modifiedStartupSc.HasValue
                    ? "Modifying file Startup.cs: " + GetResultText(modifiedStartupSc) + LineBreak
@@ -93,10 +101,10 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                    ? "Merging the .gitignore files: " + GetResultText(mergedGitignoreFiles) + LineBreak
                    : String.Empty;
                 var tsconfigJsonReport = renamedTsconfigJson
-                    ? "Renaming file tsconfig.json to tsconfig.json.old: " + GetResultText(renamedTsconfigJson) + LineBreak 
+                    ? "Renaming file tsconfig.json to tsconfig.json.old: " + GetResultText(renamedTsconfigJson) + LineBreak
                     : String.Empty;
 
-                var messageText = ngNewReport + packageJsonReport + angularCliJsonReport + startupCsReport + gitignoreReport 
+                var messageText = ngNewReport + packageJsonReport + angularCliJsonReport + startupCsReport + gitignoreReport
                     + tsconfigJsonReport + LineBreak;
 
                 // Augment the item file with our message.
@@ -279,6 +287,8 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             return false;
         }
 
+        // TODO AF20180527. Refactor. Combine the ModifyAngularCliJsonFile and ModifyAngularJsonFile top parts.
+
         /// <summary>
         /// Add a "baseHref" property in .angular-cli.json.
         /// </summary>
@@ -317,6 +327,56 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Add a "baseHref" property in angular.json (ver.6)
+        /// </summary>
+        /// <param name="projectDirectory"></param>
+        /// <param name="jsonFileName"></param>
+        /// <param name="projectName"></param>
+        /// <returns></returns>
+        private bool ModifyAngularJsonFile(string projectDirectory, string jsonFileName, string projectName)
+        {
+            const string BaseHrefPropertyName = "baseHref";
+            const string BaseHrefApi = "/";
+            const string BaseHrefMvc = "/ng/";
+
+            var projectIsMvc = Directory.Exists(Path.Combine(projectDirectory, "Views"));
+            var projectIsRazorPages = Directory.Exists(Path.Combine(projectDirectory, "Pages"));
+            var baseHrefPropertyValue = (projectIsMvc || projectIsRazorPages) ? BaseHrefMvc : BaseHrefApi;
+
+            var filePath = Path.Combine(projectDirectory, jsonFileName);
+            if (File.Exists(filePath))
+            {
+                var rootObj = JObject.Parse(File.ReadAllText(filePath));
+
+                var parentObj = FindInsertPlace2(rootObj, projectName);
+                if (parentObj != null)
+                {
+                    if (parentObj[BaseHrefPropertyName] == null)
+                    {
+                        var baseHrefProperty = new JProperty(BaseHrefPropertyName, baseHrefPropertyValue);
+                        parentObj.Add(baseHrefProperty);
+
+                        NgWizardHelper.RewriteFile(filePath, rootObj.ToString());
+                        return true;
+                    }
+                }
+
+            }
+            return false;
+        }
+
+        private JObject FindInsertPlace2(JObject rootObj, string projectName)
+        {
+            var projectObj = (JObject)rootObj["projects"][projectName];
+            if (projectObj != null)
+            {
+                var optionsObj = (JObject)projectObj.SelectToken("architect.build.options");
+                return optionsObj;
+            }
+            return null;
         }
 
         private string FindMatch(string text, string pattern)

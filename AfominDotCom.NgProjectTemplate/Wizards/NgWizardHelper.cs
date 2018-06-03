@@ -17,6 +17,7 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
         internal const string PackageJsonFileName = "package.json";
         internal const string PackageJsonOldFileName = "package.json.old";
         internal const string AngularCliJsonFileName = ".angular-cli.json";
+        internal const string AngularJsonFileName = "angular.json";
         internal const string TsconfigJsonFileName = "tsconfig.json";
         internal const string TsconfigJsonOldFileName = "tsconfig.json.old";
         internal const string StartupCsFileName = "Startup.cs";

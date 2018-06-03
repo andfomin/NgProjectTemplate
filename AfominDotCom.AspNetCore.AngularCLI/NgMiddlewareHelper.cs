@@ -10,10 +10,13 @@ namespace AfominDotCom.AspNetCore.AngularCLI
     {
         internal const string PackageJsonFileName = "package.json";
         internal const string AngularCliJsonFileName = ".angular-cli.json";
+        internal const string AngularJsonFileName = "angular.json";
 
-        internal const string ErrorAngularCliJsonNotFound = "File .angular-cli.json was not found in folder {0}.";
+        internal const string ErrorAngularCliJsonNotFound = "No \".angular-cli.json\" or \"angular.json\" file was found in folder {0}.";
         internal const string ErrorAppsNotFound = "The \"apps\" element not found in .angular-cli.json .";
+        private const string ErrorProjectsNotFound = "The \"projects\" element not found in angular.json .";
         internal const string ErrorNoBaseHrefInAngularCliJson = "A \"baseHref\" value is missing in apps[{0}] in .angular-cli.json .";
+        internal const string ErrorNgSettingsNotFound = "Angular CLI settings are not found in the .angular-cli.json/angular.json file ";
 
         //-------
 
@@ -33,29 +36,73 @@ namespace AfominDotCom.AspNetCore.AngularCLI
         internal static IEnumerable<NgAppSettings> GetAllNgAppSettings(string directory)
         {
             var angularCliJsonFilePath = Path.Combine(directory, NgMiddlewareHelper.AngularCliJsonFileName);
-            if (!File.Exists(angularCliJsonFilePath))
+            var angularJsonFilePath = Path.Combine(directory, NgMiddlewareHelper.AngularJsonFileName);
+
+            var ver1FileExists = File.Exists(angularCliJsonFilePath);
+            var ver6FileExists = File.Exists(angularJsonFilePath);
+
+            if (!ver1FileExists && !ver6FileExists)
             {
                 throw new Exception(String.Format(ErrorAngularCliJsonNotFound, directory));
             }
 
-            var obj = JObject.Parse(File.ReadAllText(angularCliJsonFilePath));
+            var fileText = File.ReadAllText(ver6FileExists ? angularJsonFilePath : angularCliJsonFilePath);
+            var rootObj = JObject.Parse(fileText);
 
-            var apps = (JArray)obj["apps"];
-            if (apps == null)
+            IEnumerable<NgAppSettings> ngAppSettings = null;
+
+            if (ver6FileExists)
             {
-                throw new Exception(ErrorAppsNotFound);
+                var projectsObj = (JObject)rootObj["projects"];
+                if (projectsObj == null)
+                {
+                    throw new Exception(ErrorProjectsNotFound);
+                }
+
+                ngAppSettings = projectsObj.Properties()
+                    .Where(i => (i.Value is JObject) && i.HasValues)
+                    .Select((i, index) => new
+                    {
+                        ProjectIndex = index,
+                        ProjectName = i.Name,
+                        OptionsObj = i.Value.SelectToken("architect.build.options"),
+                    })
+                    .Where(i => i.OptionsObj != null)
+                    .Select(i => new NgAppSettings
+                    {
+                        AppIndex = i.ProjectIndex,
+                        AppName = i.ProjectName,
+                        BaseHref = (string)i.OptionsObj["baseHref"],
+                        IndexFileName = (string)i.OptionsObj["index"],
+                    })
+                    .Where(i => i.BaseHref != null)
+                    .ToList()
+                    ;
+            }
+            else if (ver1FileExists)
+            {
+                var apps = (JArray)rootObj["apps"];
+                if (apps == null)
+                {
+                    throw new Exception(ErrorAppsNotFound);
+                }
+
+                ngAppSettings = apps
+                  .Select((i, index) => new NgAppSettings
+                  {
+                      AppIndex = index,
+                      AppName = (string)i["name"],
+                      BaseHref = (string)i["baseHref"],
+                      IndexFileName = Path.GetFileName((string)i["index"]),
+                  })
+                  .ToList()
+                  ;
             }
 
-            var ngAppSettings = apps
-              .Select((i, index) => new NgAppSettings
-              {
-                  AppIndex = index,
-                  AppName = (string)i["name"],
-                  BaseHref = (string)i["baseHref"],
-                  IndexFileName = (string)i["index"],
-              })
-              .ToList()
-              ;
+            if (ngAppSettings == null || !ngAppSettings.Any())
+            {
+                throw new Exception(ErrorNgSettingsNotFound);
+            }
             return ngAppSettings;
         }
 
