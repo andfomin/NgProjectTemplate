@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <Content Update="src\**;e2e\**;dist\**;package.json;tslint.json;tsconfig.json" CopyToPublishDirectory="Never" />
+    <!-- NgRouteMiddleware reads the config file to find out the baseHref -->
     <Content Update=".angular-cli.json" CopyToPublishDirectory="PreserveNewest"/>
     <Content Update="angular.json" CopyToPublishDirectory="PreserveNewest"/>
   </ItemGroup>
@@ -126,7 +127,7 @@
       <NgDistFiles Condition="Exists('$(NgOutDir)')" Include="$(NgOutDir)\**" />
     </ItemGroup>
     <!-- NgWwwrootDir will be created -->
-    <Copy SourceFiles="@(NgDistFiles)" DestinationFolder="$(NgWwwrootDir)" />
+    <Copy SourceFiles="@(NgDistFiles)" DestinationFiles="@(NgDistFiles->'$(NgWwwrootDir)\%(RecursiveDir)%(Filename)%(Extension)')" />
 
     <Delete Condition="'@(NgDistFiles)' != ''" Files="@(NgDistFiles)" />
 

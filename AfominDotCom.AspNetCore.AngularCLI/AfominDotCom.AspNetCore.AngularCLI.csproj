@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.6</Version>
-    <AssemblyVersion>1.0.6.0</AssemblyVersion>
-    <FileVersion>1.0.6.0</FileVersion>
+    <Version>1.0.7</Version>
+    <AssemblyVersion>1.0.7.0</AssemblyVersion>
+    <FileVersion>1.0.7.0</FileVersion>
     <Copyright>Copyright 2017, 2018</Copyright>
     <PackageLicenseUrl>https://github.com/andfomin/NgProjectTemplate/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/andfomin/NgProjectTemplate</PackageProjectUrl>
@@ -17,7 +17,7 @@
     <Authors>Andrey Fomin</Authors>
     <Product>NgProjectTemplate</Product>
     <Company>Andrey Fomin</Company>
-    <Description>This package is used to host an Angular CLI application in an ASP.NET Core 2 project. It is part of the Angular CLI Templates that you can find in the Online section of the New Project or the New Item dialogs in Visual Studio 2017.</Description>
+    <Description>This package is used to host an Angular CLI application in an ASP.NET Core 2 project. It is part of the Angular CLI Templates that you can find in the Visual Studio Marketplace.</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

@@ -23,7 +23,7 @@
     </Project>
   </TemplateContent>
   <WizardExtension>
-    <Assembly>AfominDotCom.NgProjectTemplate, Version=1.0.12.0, Culture=Neutral, PublicKeyToken=53bcf0057ad908c4</Assembly>
+    <Assembly>AfominDotCom.NgProjectTemplate, Version=1.0.13.0, Culture=Neutral, PublicKeyToken=53bcf0057ad908c4</Assembly>
     <FullClassName>AfominDotCom.NgProjectTemplate.Wizards.NgProjectWizard</FullClassName>
   </WizardExtension>
 </VSTemplate>
