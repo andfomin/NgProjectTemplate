@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="AfominDotCom.NgProjectTemplate.4e23e6f4-6f2c-4b66-8670-513bbc233486" Version="1.0.13" Language="en-US" Publisher="Andrey Fomin" />
+        <Identity Id="AfominDotCom.NgProjectTemplate.4e23e6f4-6f2c-4b66-8670-513bbc233486" Version="1.0.14" Language="en-US" Publisher="Andrey Fomin" />
         <DisplayName>Angular CLI Templates</DisplayName>
         <Description xml:space="preserve">Add Angular CLI to an existing ASP.NET Core project or create an Angular CLI static website project. Projects will launch the original NG Development Server.</Description>
         <MoreInfo>https://github.com/andfomin/NgProjectTemplate</MoreInfo>

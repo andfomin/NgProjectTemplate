@@ -59,9 +59,10 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
                     File.Move(gitignoreFilePath, gitignoreTempFilePath);
                 }
 
+                var projectName = project.Name.Replace('.', '-').Replace('_', '-');
                 // Run "ng new"
                 // ngNewOutput = RunNgNew(projectDirectory, project.Name, this.addRouting);
-                ngNewOutput = NgWizardHelper.RunNgNew(projectDirectory, project.Name, this.addRouting, this.isNgFound);
+                ngNewOutput = NgWizardHelper.RunNgNew(projectDirectory, projectName, this.addRouting, this.isNgFound);
 
                 if (File.Exists(gitignoreTempFilePath))
                 {

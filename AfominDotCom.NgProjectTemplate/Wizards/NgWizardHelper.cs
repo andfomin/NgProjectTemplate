@@ -207,15 +207,20 @@ namespace AfominDotCom.NgProjectTemplate.Wizards
             if (File.Exists(filePath))
             {
                 var lines = File.ReadAllLines(filePath);
-                //var isCoreVersion2 = lines
-                //    .Where(i => i.Contains("<TargetFramework>") && i.Contains("netcoreapp2."))
-                //    .Any()
-                //    ;
-                var isAspNetCore2 = lines
-                    .Where(i => i.Contains("<PackageReference") && i.Contains("\"Microsoft.AspNetCore.") && i.Contains("\"2."))
+                var isCoreVersion2x = lines
+                    .Where(i => i.Contains("<TargetFramework>") && i.Contains("netcoreapp2."))
                     .Any()
                     ;
-                return /* isCoreVersion2 && */ isAspNetCore2;
+                //var isAspNetCore20 = lines
+                //    .Where(i => i.Contains("<PackageReference") && i.Contains("\"Microsoft.AspNetCore.") && i.Contains("\"2."))
+                //    .Any()
+                //    ;
+                // ASP.NET Core 2.0 used Microsoft.AspNetCore.All version 2.x. ASP.NET Core 2.1 uses Microsoft.AspNetCore.App without a version specified.
+                var isAspNetCore = lines
+                    .Where(i => i.Contains("<PackageReference") && i.Contains("\"Microsoft.AspNetCore."))
+                    .Any()
+                    ;
+                return isCoreVersion2x && isAspNetCore;
             }
             return false;
         }
